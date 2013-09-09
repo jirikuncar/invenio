@@ -31,12 +31,12 @@
     {{ render_field(form.description) }}
     {{ render_field(form.graph_type) }}
     {{ render_field(form.visibility) }}
-    {{ render_field(form.csv_file) }}
+    {{ render_field(form.url_file) }}
 
   </div>
   <div class="">
      <input type="submit" name="send_button" value="{{ _("Send") }}" class="btn btn-primary"/>
-     <a class="btn" data-dismiss="modal">Close</a>
+     <a class="btn" href="{{ url_for('webvisualize.index') }}">Back</a>
   </div>
 </form>
 {% endblock %}

@@ -20,7 +20,7 @@
 """WebVisualize Map Visualizer Plugin"""
 
 class Visualizer(object):
-  """docstring for Visualizer"""
-  graph_type = 'map'
-  template = 'webvisualize_map_view.html'
+    """Webvisualize Recline.js map view"""
+    graph_type = 'map'
+    template = 'webvisualize_map_view.html'
     

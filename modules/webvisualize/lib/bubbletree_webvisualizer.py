@@ -20,7 +20,7 @@
 """WebVisualize BubbleTree Visualizer Plugin"""
 
 class Visualizer(object):
-  """docstring for Visualizer"""
-  graph_type = 'bubbletree'
-  template = 'webvisualize_bubbletree_view.html'
+    """WebVisualize BubbleTree"""
+    graph_type = 'bubbletree'
+    template = 'webvisualize_bubbletree_view.html'
     

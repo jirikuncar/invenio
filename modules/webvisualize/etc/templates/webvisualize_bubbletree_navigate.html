@@ -17,6 +17,7 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #}
 {% extends "page.html" %}
+{% set title = _("Collection Tree") %}
 
 {% block header %}
   {{ super() }}
@@ -29,13 +30,12 @@
   {% js "js/vis4.js", '02-bubbletree' %}
   {% js "js/bubbletree.js", '02-bubbletree' %}
 
-
 <style type="text/css">
   
 .bubbletree-wrapper {
-    height: 90% !important; 
+    height: 60% !important; 
     position: absolute;
-    width: 90% !important;
+    width: 35% !important;
 }
 .bubbletree {
     background: none repeat scroll 0 0 #FFFFFF !important;
@@ -48,23 +48,22 @@
     color: #000000 !important;
     cursor: default;
     position: absolute;
-    font-size: 15px !important;
     text-align: center;
 }
 .bubbletree .amount {
-    font-family: sans-serif !important;
-    font-size: 15px !important;
+    font-family: Georgia,sans-serif !important;
+    font-size: 13px !important;
 }
 .bubbletree .desc {
     font-family: sans-serif;
-    font-size: 15px !important;
+    font-size: 9px !important;
 }
 .bubbletree .label2 {
     color: #000000 !important;
     cursor: default;
     font-family: sans-serif;
-    font-size: 13px !important; 
-    margin-top: 1px !important;
+    font-size: 9px;
+    margin-top: 5px;
     position: absolute;
     text-align: center;
 }
@@ -73,12 +72,11 @@
 
 </style>
 
-
 {% endblock header %}
 
 {% block body %}
-<h2>{{ visualize_config.name }}</h2>
 <div class="row">
+
 <div class="bubbletree-wrapper span7">
     <div class="bubbletree"></div>
 </div>
@@ -95,15 +93,37 @@
 {% block javascript %}
 <script type="text/javascript">
 (function($) {
-  var data = {{ visualize_config.config|safe }}
+  var data = {{ ds_tree | safe }}
   var $tooltip = $('<div class="tooltip">Tooltip</div>');
   $('.bubbletree').append($tooltip);
   $tooltip.hide();
 
+  var tooltip = function(event) {
+    console.log('tooltip');
+  };
+
+  var nodeClick = function (node) {
+    $('.preview').empty();
+    
+    $.ajax({
+      url: '{{ url_for('search.search') }}',
+      data: {'of': 'hb', 'cc': node.name, 'rg': 3},
+      success: function ( code ) {
+        $('.preview').append('<h3>'+ node.name+ '<small class="muted"> ('+ node.amount +')</small></h3>');
+        $('.htmlbrief', $(code).html()).each(function () {
+          $('.preview').append($(this).html());
+        })
+        $('.preview').append('<a href="/collection/' +encodeURIComponent(node.name) +'"id="launcher"> More results </a>');
+      }
+  });
+  }
+
   new BubbleTree({
                 data: data,
                 container: '.bubbletree',
-                bubbleType: 'plain'
+                bubbleType: 'plain',
+                tooltipCallback: tooltip,
+                nodeClickCallback : nodeClick
               });
 
   var gotoCollection = function(){

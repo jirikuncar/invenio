@@ -28,6 +28,7 @@ from wtforms.fields import SelectField
 
 
 class VslConfigAdmin(InvenioModelView):
+    """ Add Admin view to manage visualizations """
     _can_create = True  
     _can_edit = True
     _can_delete = True
@@ -40,7 +41,8 @@ class VslConfigAdmin(InvenioModelView):
             choices=[('grid', 'Grid'), ('graph', 'Graph'), ('map', 'Map')]
         ))
 
-    column_list = ('name','title', 'creator', 'graph_type','description', 'config')
+    column_list = ('name', 'title', 'creator', 'graph_type',
+                    'description', 'config')
     page_size = 100
 
     def __init__(self, model, session, **kwargs):
@@ -50,4 +52,5 @@ def register_admin(app, admin):
     """
     Called on app initialization to register administration interface.
     """
-    admin.add_view(VslConfigAdmin(VslConfig, db.session, name='VslConfig', category="Web Visualizer"))
+    admin.add_view(VslConfigAdmin(VslConfig, db.session, name='VslConfig',
+                                     category="Web Visualizer"))

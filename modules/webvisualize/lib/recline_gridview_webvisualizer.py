@@ -20,7 +20,7 @@
 """WebVisualize Grid Visualizer Plugin"""
 
 class Visualizer(object):
-  """docstring for Visualizer"""
-  graph_type = 'grid'
-  template = 'webvisualize_grid_view.html'
+    """Webvisualize Recline.js grid view"""
+    graph_type = 'grid'
+    template = 'webvisualize_grid_view.html'
     

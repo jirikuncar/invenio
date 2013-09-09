@@ -20,7 +20,7 @@
 """WebVisualize Graph Visualizer Plugin"""
 
 class Visualizer(object):
-  """docstring for Visualizer"""
-  graph_type = 'graph'
-  template = 'webvisualize_graph_view.html'
+    """Webvisualize Recline.js graph view"""
+    graph_type = 'graph'
+    template = 'webvisualize_graph_view.html'
     
