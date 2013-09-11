@@ -1,0 +1,129 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "page.html" %}
+{% set title = _("Collection Tree") %}
+
+{% block header %}
+  {{ super() }}
+  {%- css 'css/bubbletree.css', '02-bubbletree' -%}
+
+  {% js "js/jquery.history.js", '02-bubbletree' %}
+  {% js "js/jquery.tooltip.min.js", '02-bubbletree' %}
+  {% js "js/raphael-min.js", '02-bubbletree' %}
+  {% js "js/Tween.js", '02-bubbletree' %}
+  {% js "js/vis4.js", '02-bubbletree' %}
+  {% js "js/bubbletree.js", '02-bubbletree' %}
+
+{% endblock header %}
+
+{% block body %}
+<div class="row">
+
+<div class="bubbletree-wrapper span6">
+    <div class="bubbletree"></div>
+</div>
+<div class="preview span6" style="float:right;">
+  
+</div>
+
+</div>
+
+
+{% endblock body %}
+
+
+{% block javascript %}
+<script type="text/javascript">
+(function($) {
+  var data = {{ ds_tree | tojson | safe }}
+  var $tooltip = $('<div class="tooltip">Tooltip</div>');
+  $('.bubbletree').append($tooltip);
+  $tooltip.hide();
+  var launcher = $('#launcher');
+  launcher.text('Click on one node!');
+  launcher.attr('disabled', true);
+
+  var tooltip = function(event) {
+    /*
+    if (event.type == 'SHOW') {
+      // show tooltip
+      console.log('show tooltip');
+      vis4.log(event);
+      $tooltip.css({
+        left: event.mousePos.x + 4,
+        top: event.mousePos.y + 4
+      });
+      $tooltip.html('<p>PRUEBA</p>');
+      var bubble = event.target;
+    } else {
+      // hide tooltip
+      console.log('hide tooltip');
+      $tooltip.hide();
+    }
+
+    var launcher = $('#launcher');
+
+    var button_label = 'Go to' ;
+      */
+    console.log('tooltip');
+  };
+
+  var nodeClick = function (node) {
+    $('.preview').empty();
+    var launcher = $('#launcher');
+    launcher.text('Go to ' + node.name);
+    launcher.attr('disabled', false);
+    //var temp = $.get('{{ url_for('search.search') }}',{'of': 'hb', 'cc': node.name, 'rg': 5});
+    //console.log(temp.responseText);
+  $.ajax({
+    url: '{{ url_for('search.search') }}',
+    data: {'of': 'hb', 'cc': node.name, 'rg': 3},
+    success: function ( code )
+    {
+      $('.preview').append('<h3>'+ node.name+ '<small class="muted"> ('+ node.amount +')</small></h3>');
+      var html = $(code).html();
+      $('.htmlbrief', html).each(function () {
+        $('.preview').append($(this).html());
+      })
+      $('.preview').append('<a href="/collection/' +encodeURIComponent(node.name) +'"id="launcher"> More results </a>');
+    }
+  });
+  }
+
+  new BubbleTree({
+                data: data,
+                container: '.bubbletree',
+                bubbleType: 'plain',
+                tooltipCallback: tooltip,
+                nodeClickCallback : nodeClick
+              });
+
+  var gotoCollection = function(){
+      var uri = encodeURIComponent($('.current > span').text());
+      if( uri !== '') {
+        window.location.href = '/collection/' + uri;
+      }
+  }
+
+
+})(jQuery);
+
+
+</script>
+{% endblock javascript %}

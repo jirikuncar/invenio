@@ -1,0 +1,57 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "webvisualize_recline_view.html" %}
+{% set title = _("Visualize - view") %}
+
+{% block header %}
+  {{ super() }}
+  {%- css 'css/map.css', '03-map' -%}
+  {%- css 'css/leaflet.css', '03-map' -%}
+  {%- css 'css/MarkerCluster.css', '03-map' -%}
+  {%- css 'css/MarkerCluster.Default.css', '03-map' -%}
+  {% js "js/leaflet.js", '03-map' %}
+  {% js "js/leaflet.markercluster.js", '03-map' %}
+
+{% endblock header %}
+
+{% block body %}
+<h1>TEST - view</h1>
+<h2>{{ visualize_config.title }}</h2>
+<h2>{{ visualize_config.id_creator }}</h2>
+<h2>{{ visualize_config.graph_type }}</h2>
+
+<div id="data-map"></div>
+
+{{ super() }}
+
+{% endblock %}
+
+{% block javascript_code %}
+
+  // MAP
+  L.Icon.Default.imagePath = '/img/';
+  var $data_map = $("#data-map");
+  var view = new recline.View.Map({
+    el: $data_map,
+    model: dataset
+  });
+
+  view.render();
+
+{% endblock javascript_code %}

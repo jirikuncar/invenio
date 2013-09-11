@@ -1,0 +1,53 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "page.html" %}
+{% set title = _("Visualize - view") %}
+
+{% block header %}
+  {{ super() }}
+  {%- css 'css/slick.grid.css', '01-recline' -%}
+  {%- css 'css/flot.css', '01-recline' -%}
+  {%- css 'css/leaflet.css', '01-recline' -%}
+  {%- css 'css/MarkerCluster.css', '01-recline' -%}
+  {%- css 'css/MarkerCluster.Default.css', '01-recline' -%}
+  {%- css 'css/map.css', '01-recline' -%}
+
+  {% js "js/underscore.js", '01-recline' %}
+  {% js "js/backbone.js", '01-recline' %}
+  {% js "js/mustache.js", '01-recline' %}
+  {% js "js/jquery.event.drag-2.0.min.js", '01-recline' %}
+  {% js "js/jquery-ui-1.8.16.custom.min.js", '01-recline' %}
+  {% js "js/slick.grid.min.js", '01-recline' %}
+  {% js "js/jquery.flot.js", '01-recline' %}
+  {% js "js/leaflet.js", '01-recline' %}
+  {% js "js/leaflet.markercluster.js", '01-recline' %}
+  {% js "js/recline.js", '01-recline' %}
+{% endblock header %}
+
+{% block body %}
+<h1>TEST - view</h1>
+<h2>{{ visualize_config.title }}</h2>
+<h2>{{ visualize_config.id_creator }}</h2>
+<h2>{{ visualize_config.icon }}</h2>
+<h2>{{ visualize_config.config  }}</h2>
+
+<h2>{{ visualizer }}</h2>
+
+
+{% endblock %}

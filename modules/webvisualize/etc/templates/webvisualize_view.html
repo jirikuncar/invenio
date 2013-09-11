@@ -1,0 +1,137 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "page.html" %}
+{% set title = _("Visualize - view") %}
+
+{% block header %}
+  {{ super() }}
+  {%- css 'css/slick.grid.css', '01-recline' -%}
+  {%- css 'css/flot.css', '01-recline' -%}
+  {%- css 'css/leaflet.css', '01-recline' -%}
+  {%- css 'css/MarkerCluster.css', '01-recline' -%}
+  {%- css 'css/MarkerCluster.Default.css', '01-recline' -%}
+  {%- css 'css/map.css', '01-recline' -%}
+
+  {% js "js/underscore.js", '01-recline' %}
+  {% js "js/backbone.js", '01-recline' %}
+  {% js "js/mustache.js", '01-recline' %}
+  {% js "js/jquery.event.drag-2.0.min.js", '01-recline' %}
+  {% js "js/jquery-ui-1.8.16.custom.min.js", '01-recline' %}
+  {% js "js/slick.grid.min.js", '01-recline' %}
+  {% js "js/jquery.flot.js", '01-recline' %}
+  {% js "js/leaflet.js", '01-recline' %}
+  {% js "js/leaflet.markercluster.js", '01-recline' %}
+  {% js "js/recline.js", '01-recline' %}
+{% endblock header %}
+
+{% block body %}
+<h1>TEST - view</h1>
+<h2>{{ visualize_config.title }}</h2>
+<h2>{{ visualize_config.id_creator }}</h2>
+<h2>{{ visualize_config.icon }}</h2>
+<h2>{{ visualize_config.config  }}</h2>
+
+<div id="my-table" style="height: 400px"></div>
+<div id="my-graph"></div>
+<div id="my-map"></div>
+<div id="my-map-infobox"></div>
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+(function($) {
+
+  var vconfig = {{ visualize_config.config|safe }};
+
+
+  // create the dataset in the usual way but specifying file attribute
+  var dataset = new recline.Model.Dataset(
+    {{ visualize_config.config|safe }});
+  // later you can use filter |tojson for db.JSON!!!
+
+
+  // TABLE
+  var $my_table = $("#my-table");
+  // now load - note that this is again async (HTML5 File API is async)
+  // dataset.fetch().done(function() { console.log('here'); });
+  dataset.fetch();
+
+  // For demonstrations purposes display the data in a grid
+  var grid = new recline.View.SlickGrid({
+    model: dataset,
+    el: $my_table,
+    state: {
+      fitColumns:true
+    }
+  });
+  grid.visible = true;
+  grid.render()
+
+  // GRAPH
+  var $my_graph = $("#my-graph");
+
+  var graph = new recline.View.Graph({
+    model: dataset,
+    state: {
+      group: "Name",
+      series: ["Diff. last month", "Total N. of doc."],
+      graphType: 'columns',
+      graphOptions:{
+        yaxis:{
+          min: 1, 
+          ticks:[ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000],
+          transform: function(v) {
+            return v === 0 ? Math.log(0.00001): Math.log(v);
+          } /*move away from zero*/   
+        },
+        grid : { hoverable:true } 
+      }
+    }
+  });
+
+  $my_graph.append(graph.el);
+  graph.render();
+  graph.redraw();
+
+
+  // MAP
+  L.Icon.Default.imagePath = '/img/';
+  var data_map = [
+    {id:0, x:3, name: 'CERN - Meyrin site', country:'CH', geo: {lat:46.233691, lon:6.052734} },
+    {id:1, x:4, name: 'CERN - Prevessin site', country:'FR', geo: {lat:46.258324, lon:6.055502} }
+  ];
+
+  var dataset_map = new recline.Model.Dataset({
+    records: data_map
+  });
+
+  var $my_map = $("#my-map");
+  var view = new recline.View.Map({
+    el: $my_map,
+    model: dataset_map
+  });
+
+  view.render();
+
+})(jQuery);
+{% block visualize_javascript %}
+
+</script>
+{% endblock javascript %}

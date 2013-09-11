@@ -1,0 +1,112 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "webvisualize_recline_view.html" %}
+{% set title = _("Visualize - view") %}
+
+{% block header %}
+  {{ super() }}
+  {%- css 'css/flot.css', '02-graph' -%}
+  {% js "js/jquery.flot.js", '02-graph' %}
+{% endblock header %}
+
+{% block body %}
+<h1>{{ visualize_config.title }}</h1>
+<div class="inline">
+<div class="btn-group">
+  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    Graph type
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu">
+  <li><a id="lines-button"class="graph-button" data-graph="lines">Lines</a></li>
+  <li><a id="points-button"class="graph-button" data-graph="points">Points</a></li>
+  <li><a id="lines-and-points-button" class="graph-button" data-graph="lines-and-points">Lines and Points</a></li>
+  <li><a id="bars-button" class="graph-button" data-graph="bars">Bars</a></li>
+  <li><a id="columns-button" class="graph-button " data-graph="columns">Columns</a></li>
+  </ul>
+</div>
+<div class="btn-group">
+  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    Change Scale
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu">
+  <!-- dropdown menu links -->
+    <li>
+      <a id="linear-scale" class="change-scale" tabindex="-1">Linear scale</a>
+    </li>
+    <li>
+      <a id="log-scale" class="change-scale" tabindex="-1">Logarithmic scale</a>
+    </li>
+  </ul>
+</div>
+</div>
+<div id="data-graph"></div>
+{{super()}}
+{% endblock %}
+
+{% block javascript_code %}
+
+  // GRAPH
+  var $data_graph = $("#data-graph");
+  // Creates the graph
+  var graph = new recline.View.Graph({
+    model: dataset,
+    state: {
+      group: fields[0], 
+      series: fields.slice(1),
+      graphType: 'columns',
+    }
+  });
+  $data_graph.append(graph.el);
+  graph.render();
+  graph.redraw();
+
+  //Changes the scale of the graph from linear to logarithm
+  // or viceversa
+  $(".change-scale").click(function() {
+    if($(this).attr('id') === "linear-scale" && 
+      graph.state.attributes.hasOwnProperty('graphOptions')){
+      delete graph.state.attributes.graphOptions;
+      graph.redraw();
+    } 
+    if($(this).attr('id') === "log-scale" && 
+      !graph.state.attributes.hasOwnProperty('graphOptions')){
+        graph.state.attributes['graphOptions'] = { 
+          yaxis:{
+            min: 1, 
+            ticks:[0, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000],
+            transform: function(v) {
+              return v <= 0 ? Math.log(0.00001): Math.log(v);
+            } /*move away from zero*/   
+          },
+        }
+      graph.redraw(); 
+    }
+    
+  });
+
+  //Changes to other graphType(lines, bars, columns,...)
+  $(".graph-button").click(function() {
+      if(graph.state.attributes.graphType !== $(this).attr('data-graph')){
+        graph.state.attributes.graphType = $(this).attr('data-graph');
+        graph.redraw();
+      }
+  });
+{% endblock javascript_code %}
