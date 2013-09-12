@@ -28,6 +28,7 @@ import os
 class FileManagerRegressionTests(InvenioTestCase):
 
     def setUp(self):
+        self.path = CFG_WEBDIR + '/static'
         self.csv_file_content = '''\
 paid_by,date,transaction_id,currency,amount,paid_to,spending_area,unique_rowid
 "London Borough of Hammersmith and Fulham",2010-01-01,405869,GBP,898.64,"ADT FIRE & SECURITY PLC","Childrens Services",1
@@ -60,15 +61,57 @@ paid_by,date,transaction_id,currency,amount,paid_to,spending_area,unique_rowid
 "London Borough of Hammersmith and Fulham",2010-01-01,409319,GBP,-826.32,"EDF ENERGY 1 LIMITED","Resident Services",28
 "London Borough of Hammersmith and Fulham",2010-01-01,483559,GBP,2950,"e-MENTORING LIMITED","Childrens Services",29
 '''
-        self.path = CFG_WEBDIR + '/static'
-        self.csv_file_name = 'filemanager_regression_tests.csv'
-        with open(os.path.join(self.path,  self.csv_file_name), 'w') as file_url:
-            file_url.write(self.csv_file_content) 
+        self.CERN1_file_content = '''\
+MEMBER STATES,6939
+Austria,137
+Belgium,110
+Bulgaria,87
+Czech Republic,199
+Denmark,67
+Finland,96
+France,830
+Germany,1281
+Greece,177
+Hungary,74
+Italy,1802
+Netherlands,152
+Norway,69
+Poland,278
+Portugal,126
+Slovakia,91
+Spain,386
+Sweden,79
+Switzerland,214
+United Kingdom,684
+'''
+        self.CERN2_file_content = '''\
+OBSERVERS,2590
+India,228
+Japan,259
+Russia,998
+Turkey,127
+USA,978
+'''
+        self.csv_file_name = 'filemanager_regression_tests_basic.csv'
+        self.CERN1_file_name = 'filemanager_regression_tests_CERN1.csv'
+        self.CERN2_file_name = 'filemanager_regression_tests_CERN2.csv'
+
+        self.files = {
+            self.csv_file_name: self.csv_file_content,
+            self.CERN1_file_name: self.CERN2_file_content,
+            self.CERN2_file_name: self.CERN2_file_content
+        }
+        for name, content in self.files.iteritems(): 
+            with open(os.path.join(self.path, name), 'w') as file_url:
+                file_url.write(content) 
 
         self.csv_file = CFG_SITE_SECURE_URL + '/static/' + self.csv_file_name
+        self.CERN1_file = CFG_SITE_SECURE_URL + '/static/' + self.CERN1_file_name
+        self.CERN2_file = CFG_SITE_SECURE_URL + '/static/' + self.CERN2_file_name
 
     def tearDown(self):
-        os.remove(os.path.join(self.path,  self.csv_file_name))
+        for name in self.files.iterkeys():
+            os.remove(os.path.join(self.path, name))
 
     def test_no_valid_action(self):
         url = url_for('filemanager.perform', action='anything', _external=True)
@@ -120,6 +163,40 @@ paid_by,date,transaction_id,currency,amount,paid_to,spending_area,unique_rowid
                     ' and Housing Services')
         errors  = test_web_page_content(url, expected_text=expected)
         self.assertEquals([], errors)
+
+    def test_CERN_staff_to_bubbletree_files(self):
+        print self.CERN1_file
+        print self.CERN2_file
+        url = url_for('filemanager.perform', action='cernstafftobubbletree', 
+                                             file=[self.CERN1_file, self.CERN2_file], 
+                                             _external=True)
+        print url
+        test_web_page_existence(url)
+        expected = ('{"amount": 11146, "children": [{"amount": "6939", "children": '
+            '[{"amount": "137", "name": "Austria", "label": "Austria"}, {"amount": "'
+            '110", "name": "Belgium", "label": "Belgium"}, {"amount": "87", "name": '
+            '"Bulgaria", "label": "Bulgaria"}, {"amount": "199", "name": "Czech Repub'
+            'lic", "label": "Czech Republic"}, {"amount": "67", "name": "Denmark", "la'
+            'bel": "Denmark"}, {"amount": "96", "name": "Finland", "label": "Finland"},'
+            ' {"amount": "830", "name": "France", "label": "France"}, {"amount": "1281",'
+            ' "name": "Germany", "label": "Germany"}, {"amount": "177", "name": "Greece'
+            '", "label": "Greece"}, {"amount": "74", "name": "Hungary", "label": "Hunga'
+            'ry"}, {"amount": "1802", "name": "Italy", "label": "Italy"}, {"amount": "1'
+            '52", "name": "Netherlands", "label": "Netherlands"}, {"amount": "69", "na'
+            'me": "Norway", "label": "Norway"}, {"amount": "278", "name": "Poland", "la'
+            'bel": "Poland"}, {"amount": "126", "name": "Portugal", "label": "Portugal"'
+            '}, {"amount": "91", "name": "Slovakia", "label": "Slovakia"}, {"amount": "'
+            '386", "name": "Spain", "label": "Spain"}, {"amount": "79", "name": "Sweden'
+            '", "label": "Sweden"}, {"amount": "214", "name": "Switzerland", "label": "'
+            'Switzerland"}, {"amount": "684", "name": "United Kingdom", "label": "Unit'
+            'ed Kingdom"}], "name": "MEMBER STATES", "label": "MEMBER STATES"}, {"amount'
+            '": "2590", "children": [{"amount": "228", "name": "India", "label": "India'
+            '"}, {"amount": "259", "name": "Japan", "label": "Japan"}, {"amount": "998'
+            '", "name": "Russia", "label": "Russia"}, {"amount": "127", "name": "Turkey'
+            '", "label": "Turkey"}, {"amount": "978", "name": "USA", "label": "USA"}], '
+            '"name": "OBSERVERS", "label": "OBSERVERS"}], "name": "CERN Staff", "label"'
+            ': "CERN Staff"}')
+
 
 TEST_SUITE = make_test_suite(FileManagerRegressionTests)
 
