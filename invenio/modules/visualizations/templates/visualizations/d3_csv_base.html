@@ -1,0 +1,80 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013, 2014 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "visualizations/view.html" %}
+
+{% block header %}
+  {{ super() }}
+  <script type="text/javascript" src="http://mbostock.github.com/d3/d3.min.js"></script>
+{% endblock header %}
+
+{% block visualization %}
+  <div id="grid"></div>
+  {{ super() }}
+{% endblock %}
+
+{% block javascript %}
+  {{ super() }}
+  <script type="text/javascript">
+
+    (function($) {
+      var resource = "{{ visualization['resource'] }}";
+
+      function tabulate(data, target, columns) {
+        var table = d3.select(target).append("table").classed({
+              'table': true,
+              'table-hover': true,
+              'table-bordered': true,
+            }),
+            thead = table.append("thead"),
+            tbody = table.append("tbody");
+
+        // append the header row
+        thead.append("tr")
+            .selectAll("th")
+            .data(columns)
+            .enter()
+            .append("th")
+                .text(function(column) { return column; });
+
+        // create a row for each object in the data
+        var rows = tbody.selectAll("tr")
+            .data(data)
+            .enter()
+            .append("tr");
+
+        // create a cell in each row for each column
+        var cells = rows.selectAll("td")
+            .data(function(row) {
+                return columns.map(function(column) {
+                    return {column: column, value: row[column]};
+                });
+            })
+            .enter()
+            .append("td")
+            .text(function(d) { return d.value; });
+        return table;
+      }
+
+      d3.csv(resource, function(data) {
+        tabulate(data, "#grid", {{ visualization['columns.id']|tojson }});
+      });
+
+    })(jQuery);
+  </script>
+{% endblock javascript %}

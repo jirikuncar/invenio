@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -18,11 +18,17 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02D111-1307, USA.
 
 """
-Webvisualize forms.
+    invenio.modules.visualizations.admin
+    ------------------------------------
+
+    Visualization Config administration interface.
 """
-from invenio.webinterface_handler_flask_utils import _
-from invenio.wtforms_utils import InvenioBaseForm
+
 from wtforms import validators, TextField, SelectField, RadioField
+
+from invenio.base.i18n import _
+from invenio.utils.forms import InvenioBaseForm
+
 
 class AddVisualizationForm(InvenioBaseForm):
     """
@@ -32,10 +38,10 @@ class AddVisualizationForm(InvenioBaseForm):
     title = TextField(_('Title'), [validators.Required()])
     description = TextField(_('Description'), [validators.Optional()])
     graph_type = SelectField(_('Graph type'), choices=[('grid', 'Grid'),
-                                                       ('graph', 'Graph'), 
-                                                       ('map', 'Map'), 
+                                                       ('graph', 'Graph'),
+                                                       ('map', 'Map'),
                                                        ('bubbletree', 'Tree')])
-    visibility = RadioField(_('Visibility'), choices=[('public','Public'), 
-                                                      ('private','Private')])
-    url_file = TextField(_('File URL'), [validators.Required(), 
-                                        validators.URL(require_tld=False)])
+    visibility = RadioField(_('Visibility'), choices=[('public', 'Public'),
+                                                      ('private', 'Private')])
+    url_file = TextField(_('File URL'), [validators.Required(),
+                                         validators.URL(require_tld=False)])

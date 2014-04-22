@@ -1,6 +1,7 @@
-{#
+# -*- coding: utf-8 -*-
+##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -15,14 +16,14 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-#}
-{% extends "webvisualize_recline_view.html" %}
-{% set title = _("Visualize - view") %}
 
-{% block body %}
-<h1>TEST - view</h1>
-<h2>{{ visualize_config.title }}</h2>
+from invenio.testsuite import make_test_suite, run_test_suite, InvenioTestCase
 
-{{ super() }}
 
-{% endblock %}
+class VisualizationTests(InvenioTestCase):
+    pass
+
+TEST_SUITE = make_test_suite(VisualizationTests)
+
+if __name__ == "__main__":
+    run_test_suite(TEST_SUITE)

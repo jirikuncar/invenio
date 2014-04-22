@@ -62,6 +62,7 @@ PACKAGES_EXCLUDE = [
     'invenio.modules.communities',
     'invenio.modules.filemanager',
     'invenio.modules.pages',
+    'invenio.modules.visualizations',
 ]
 
 CFG_PREFIX = distutils.sysconfig.get_config_var("prefix")

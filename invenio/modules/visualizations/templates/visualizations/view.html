@@ -1,6 +1,6 @@
 {#
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -17,26 +17,22 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #}
 {% extends "page.html" %}
-{% from "_formhelpers.html" import render_field with context %}
-{% set title = _("Add a visualization") %}
-{% block body %}
-<form name="write_message"
-      action="{{ url_for('webvisualize.new') }}"
-      style=""
-      method="post" class="form-horizontal">
-  <div class="">
-    {{ form.csrf_token }}
-    {{ render_field(form.name) }}
-    {{ render_field(form.title) }}
-    {{ render_field(form.description) }}
-    {{ render_field(form.graph_type) }}
-    {{ render_field(form.visibility) }}
-    {{ render_field(form.url_file) }}
+{% set title = visualization.get('title', _('Visualization')) %}
 
+{% block body %}
+  <p class="lead">
+    {{ visualization.get('description', '')|safe}}
+  </p>
+
+  {% block visualization %}
+  <button type="button" class="btn" data-toggle="collapse"
+          data-target="#visualization_detail">
+    {{ _('Details') }}
+  </button>
+
+  <div id="visualization_detail" class="collapse">
+    <hr/>
+    <pre>{{ visualization }}</pre>
   </div>
-  <div class="">
-     <input type="submit" name="send_button" value="{{ _("Send") }}" class="btn btn-primary"/>
-     <a class="btn" href="{{ url_for('webvisualize.index') }}">Back</a>
-  </div>
-</form>
+  {% endblock visualization %}
 {% endblock %}

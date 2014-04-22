@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -17,10 +17,29 @@
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""WebVisualize Grid Visualizer Plugin"""
+"""
+    invenio.modules.visualizations.tasks
+    ------------------------------------
 
-class Visualizer(object):
-    """Webvisualize Recline.js grid view"""
-    graph_type = 'grid'
-    template = 'webvisualize_grid_view.html'
-    
+    Visualization tasks.
+"""
+
+from __future__ import absolute_import
+
+from invenio.modules.deposit.models import Deposition
+from . import api
+
+
+def create_visualization(**kwargs):
+    """Creates visualization from object data."""
+
+    def _create_visualization(obj, dummy_eng):
+        """Task implementation."""
+        d = Deposition(obj)
+        sip = d.get_latest_sip(sealed=False)
+        kwargs['model'] = d.type.__name__
+        v = api.Visualization.create(sip.metadata, **kwargs)
+        sip.package = v.dumps()
+        sip.seal()
+        d.update()
+    return _create_visualization

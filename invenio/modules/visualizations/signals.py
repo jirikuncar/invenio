@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -17,10 +17,18 @@
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""WebVisualize Map Visualizer Plugin"""
+"""
+    invenio.modules.visualizations.signal
+    --------------------------------
 
-class Visualizer(object):
-    """Webvisualize Recline.js map view"""
-    graph_type = 'map'
-    template = 'webvisualize_map_view.html'
-    
+    Defines signals used in visualization API.
+"""
+
+from blinker import Namespace
+_signals = Namespace()
+
+visualization_created = _signals.signal(
+    'visualization_created')
+"""
+This signal is sent right after the visualization is created.
+"""
