@@ -149,9 +149,13 @@ class SessionInterface(FlaskSessionInterface):
             pass
         # Set all user id keys for compatibility.
         session.uid = uid
-        self.backend.set(sid,
-                         self.serializer.dumps(dict(session)),
-                         timeout=timeout)
+        try:
+            self.backend.set(sid,
+                             self.serializer.dumps(dict(session)),
+                             timeout=timeout)
+        except Exception:
+            current_app.logger.error("Error: during storing session %s" % (
+                dict(session), ))
 
         if not self.has_secure_url:
             response.set_cookie(app.session_cookie_name, sid,
