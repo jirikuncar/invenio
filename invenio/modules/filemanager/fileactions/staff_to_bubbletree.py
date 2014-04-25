@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -16,47 +16,54 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from invenio.filemanager_helper import FileManagerAction
-import urllib, urllib2, csv, json
 
-"""FileManager tranform action Plugin"""
+"""FileManager tranform action."""
+
+import csv
+import json
+import requests
+
+from six import StringIO
+
+from ..utils import FileManagerAction
+
 
 class FileAction(FileManagerAction):
-    """docstring for Visualizer"""
-    name = 'cernstafftobubbletree'
+    """File Action plugin implementation."""
+
     accepted_mimetypes = ['text/plain', 'text/csv']
     response_mimetype = 'application/json'
 
     def action(self, *args, **kwargs):
-        """
-        Transforms a CSV file to a JSON file
-        """
+        """Transforms a CSV file to a JSON file."""
         files = kwargs.get('files')
-
+        name = kwargs['params'].get('name', 'top-category')
+        label = kwargs['params'].get('label', 'Top Category')
         result = {
-          'name':'CERN Staff',
-          'label':'CERN Staff',
+            'name': name,
+            'label': label,
         }
         total_amount = 0
         types = []
         for filename in files:
-            csvreader = csv.reader(urllib2.urlopen(urllib.unquote(filename)))
+            response = requests.get(filename)
+            csvreader = csv.reader(StringIO(response.content))
             header = csvreader.next()
             category = {
-            'name':header[0],
-            'label':header[0],
-            'amount':header[1] 
+                'name': header[0],
+                'label': header[0],
+                'amount': header[1],
             }
             total_amount += int(header[1])
-            countries = []
+            children = []
             for row in csvreader:
-                country = {
-                    'name':row[0],
-                    'label':row[0],
-                    'amount':row[1] 
-                    }
-                countries.append(country)
-            category['children'] = countries
+                child = {
+                    'name': row[0],
+                    'label': row[0],
+                    'amount': row[1],
+                }
+                children.append(child)
+            category['children'] = children
             types.append(category)
         result['amount'] = total_amount
         result['children'] = types

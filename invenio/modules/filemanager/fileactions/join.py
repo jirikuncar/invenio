@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -16,48 +16,51 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-import urllib, urllib2
-from invenio.filemanager_helper import FileManagerAction
-import csv
 
-"""FileManager join action Plugin"""
+"""FileManager join action."""
+
+import csv
+import requests
+
+from six import StringIO
+
+from ..utils import FileManagerAction
+
 
 class FileAction(FileManagerAction):
-    """docstring for Visualizer"""
-    name = 'join'
+    """File Action plugin implementation."""
+
     accepted_mimetypes = ['text/plain', 'text/csv']
     response_mimetype = 'text/csv'
 
     def action(self, *args, **kwargs):
-        """
-        Merges several csv files in one and it is uploaded to Invenio.
-        Note: All files must have the same header
+        """Merges several csv files in one.
+
+        :note: All files must have the same header.
         """
         files = kwargs.get('files')
         if not files or len(files) < 2:
             raise Exception('Two o more files needed to join!')
 
-         # Check if mimetype is accepted
+        data = StringIO()
+        result = csv.writer(data, quoting=csv.QUOTE_MINIMAL)
+        previous_header = None
         for filename in files:
-            mimetype = urllib.URLopener().retrieve(filename)[1].gettype()
+            response = requests.get(filename)
+            # Check if mimetype is accepted
+            mimetype = response.headers.get('content-type')
             if mimetype not in self.accepted_mimetypes:
                 raise Exception('%s has not a valid mimetype', filename)
 
-        # check headers
-        header = urllib2.urlopen(urllib.unquote(files[0])).readline()
-        for i in range(1, len(files)):
-            if urllib2.urlopen(urllib.unquote(files[i])).readline() != header:
-                raise Exception('Different Header!')
-        
-        # joining
-        result = []		
-        result.append(header[:-1]) #skip the '\n' at the end of the header
-
-
-        for filename in files:
-            csvreader = csv.reader(urllib2.urlopen(urllib.unquote(filename)))
-            csvreader.next() #skip header
+            # check headers
+            csvreader = csv.reader(StringIO(response.content))
+            header = csvreader.next()
+            if previous_header is not None:
+                if header != previous_header:
+                    raise Exception('Different Header!')
+            else:
+                result.writerow(header)
             for line in csvreader:
-                result.append(','.join(line))
+                result.writerow(line)
 
-        return '\n'.join(result)
+        return data.getvalue()

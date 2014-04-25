@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -17,8 +19,11 @@
 
 """FileManager helper methods"""
 
-from invenio.cache import cache
+import hashlib
 import zlib
+
+from invenio.ext.cache import cache
+
 
 class FileManagerCache(object):
 
@@ -26,12 +31,7 @@ class FileManagerCache(object):
         self.engine = engine
 
     def _get_cache_key(self, params):
-        """
-        Calculates a string from the params, 
-        to be used as a key in the cache
-
-        """
-        import hashlib
+        """Calculates cache key from the parameters."""
         m = hashlib.md5()
         query = []
         for key in sorted(params.keys()):
@@ -41,39 +41,47 @@ class FileManagerCache(object):
         return m.hexdigest()
 
     def get(self, params):
-        """
-        Get the element from the cache whose key is calculated from the params. 
-        Elements are stored compressed so it is necessary to decompress 
+        """Gets the element from the cache identified by parameters.
+
+        Elements are stored compressed so it is necessary to decompress
         it before returning it.
 
-        @param params: Params in the request
-        
+        :param params: Parameters in the request.
         """
-        cached = self.engine.get(self._get_cache_key(params))
-        return zlib.decompress(cached) if cached else None
+        try:
+            cached = self.engine.get(self._get_cache_key(params))
+            return zlib.decompress(cached) if cached else None
+        except:
+            return None
 
     def set(self, params, obj):
         """
-        Store 'obj' in the cache. 
+        Store 'obj' in the cache.
         The key is calculated from the params
 
-        @param params: Params in the request, for calculating the key
-        @param obj: Object to be stored
-        
+        :param params: Parameters in the request, for calculating the key.
+        :param obj: Object to be stored.
         """
-        self.engine.set(self._get_cache_key(params), zlib.compress((obj)))
+        try:
+            self.engine.set(self._get_cache_key(params), zlib.compress((obj)))
+        except:
+            pass
+
 
 class FileManagerAction(object):
+    """File Manager Action"""
+
     def __init__(self, cache=FileManagerCache):
         self.cache = cache()
 
     def __call__(self, *args, **kwargs):
         params = kwargs.get('params')
+        data = None
         data = self.cache.get(params)
-        if not data:
+        if data is None:
             data = self.action(*args, **kwargs)
             self.cache.set(params, data)
         return data, self.response_mimetype
-    
+
     def action(self, *args, **kwargs):
-        raise 'Needs to be implemented'
+        raise NotImplementedError()

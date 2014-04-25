@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -16,25 +16,26 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-import urllib, urllib2
-from invenio.filemanager_helper import FileManagerAction
 
-"""FileManager cut action Plugin"""
+"""FileManager cut action."""
+
+import urllib
+import urllib2
+
+from ..utils import FileManagerAction
+
 
 class FileAction(FileManagerAction):
-    """docstring for Visualizer"""
-    name = 'cut'
+    """File Action plugin implementation."""
+
     accepted_mimetypes = ['text/plain', 'text/csv']
     response_mimetype = 'text/csv'
-  
-    
-  
+
     def action(self, *args, **kwargs):
-        """
-        Cut a CSV file from its different columns
-        """
+        """Cuts a CSV file from its different columns."""
         original_file = kwargs.get('files')[0]
         fields = kwargs['params'].getlist('field')
+
         if not original_file or not fields or len(fields) < 2:
             raise Exception('At least two fields needed!')
 
@@ -45,15 +46,13 @@ class FileAction(FileManagerAction):
 
         header = urllib2.urlopen(urllib.unquote(original_file)).readline()
 
-        columns_to_remove = [pos for pos, elem in enumerate(header.split(',')) 
-        						if elem not in fields]
+        columns_to_remove = [pos for pos, elem in enumerate(header.split(','))
+                             if elem not in fields]
         result = []
         import csv
         csvreader = csv.reader(urllib2.urlopen(urllib.unquote(original_file)))
         for line in csvreader:
-            result.append(','.join([elem for pos, elem in enumerate(line) 
-                                if not pos in columns_to_remove]))
-        
+            result.append(','.join([elem for pos, elem in enumerate(line)
+                                    if pos not in columns_to_remove]))
+
         return '\n'.join(result)
-         
-   

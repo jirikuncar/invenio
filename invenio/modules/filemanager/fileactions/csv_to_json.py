@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of Invenio.
-## Copyright (C) 2013 CERN.
+## Copyright (C) 2013, 2014 CERN.
 ##
 ## Invenio is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -16,24 +16,28 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from invenio.filemanager_helper import FileManagerAction
-import urllib, urllib2, csv, json
 
-"""FileManager tranform action Plugin"""
+"""FileManager tranform action."""
+
+import csv
+import json
+import urllib
+import urllib2
+
+from ..utils import FileManagerAction
+
 
 class FileAction(FileManagerAction):
-    """docstring for Visualizer"""
-    name = 'csvtojson'
+    """File Action plugin implementation."""
+
     accepted_mimetypes = ['text/plain', 'text/csv']
     response_mimetype = 'application/json'
 
     def action(self, *args, **kwargs):
-        """
-        Transforms a CSV file to a JSON file
-        """
-        filename = kwargs.get('files')[0]      
+        """Transforms a CSV file to a JSON file."""
+        filename = kwargs.get('files')[0]
 
-        if not filename: 
+        if not filename:
             raise Exception('Wrong params!')
 
         json_file = []
@@ -44,4 +48,4 @@ class FileAction(FileManagerAction):
             for index in range(len(line)):
                 dict_line[header[index]] = line[index]
             json_file.append(dict_line)
-        return json.dumps(json_file)  
+        return json.dumps(json_file)
