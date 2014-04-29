@@ -34,6 +34,7 @@ if sys.hexversion < 0x2040000:
     # pylint: enable=W0622
 
 from six import iteritems
+from werkzeug.local import LocalProxy
 
 from invenio.base.i18n import gettext_set_language
 from invenio.config import CFG_SITE_ADMIN_EMAIL, CFG_SITE_LANG, CFG_SITE_RECORD
@@ -46,102 +47,77 @@ from invenio.modules.access.firerole import compile_role_definition, \
 from intbitset import intbitset
 from invenio.ext.sqlalchemy import db
 from invenio.modules.access.models import AccAuthorization, AccACTION, \
-                                    AccARGUMENT, UserAccROLE
+                                    AccARGUMENT, UserAccROLE, AccROLE
 
-CFG_SUPERADMINROLE_ID = 0
-try:
-    id_tmp = run_sql('SELECT id FROM accROLE WHERE name=%s', (SUPERADMINROLE, ))
-    if id_tmp:
-        CFG_SUPERADMINROLE_ID = int(id_tmp[0][0])
-except:
-    pass
+
+def get_superadminrole_id(name=None):
+    """Finds id of superadmin role."""
+    if name is None:
+        name = SUPERADMINROLE
+    try:
+        return db.session.query(AccROLE.id).filter(
+            AccROLE.name == name).scalar()
+    except Exception:
+        return 0
+
+CFG_SUPERADMINROLE_ID = LocalProxy(get_superadminrole_id)
 
 # ACTIONS
 
-def acc_add_action(name_action='', description='', optional='no',
-        *allowedkeywords):
-    """function to create new entry in accACTION for an action
+def acc_add_action(name='', description='', optional='no',
+                   *allowedkeywords):
+    """Adds new actions to database.
 
-    name_action     - name of the new action, must be unique
+    :param name: name of the new action, must be unique
+    :param description: desption of the action
+    :param optional:
+    :param allowedkeywords: a list of allowedkeywords
 
-    keyvalstr       - string with allowed keywords
-
-    allowedkeywords - a list of allowedkeywords
-
-    keyvalstr and allowedkeywordsdict can not be in use simultanously
-
-    success -> return id_action, name_action, description and allowedkeywords
-    failure -> return 0 """
-
-    keystr = ''
-    # action with this name all ready exists, return 0
-    if db.session.query(db.exists()).filter(
-        AccACTION.name==name_action).scalar():
-        return 0
-
-    # create keyword string
-    for value in allowedkeywords:
-        if keystr:
-            keystr += ','
-        keystr += value
+    :return: tuple with action values or 0
+    failure -> return 0 i"""
 
     if not allowedkeywords:
         optional = 'no'
+        allowedkeywords = ''
+    else:
+        # create keyword string
+        allowedkeywords = ','.join(allowedkeywords)
 
     # insert the new entry
     try:
-        a = AccACTION(name=name_action, description=description,
-                      allowedkeywords=keystr, optional=optional)
-        db.session.add(a)
+        acc = AccACTION(name=name, description=description,
+                        allowedkeywords=allowedkeywords,
+                        optional=optional)
+        db.session.add(acc)
         db.session.commit()
-        return True, name_action, description, keystr, optional
+        return (acc.id, acc.name, acc.description, acc.allowedkeywords,
+            acc.optional)
     except ProgrammingError:
         return 0
 
 
-def acc_delete_action(id_action=0, name_action=0):
-    """delete action in accACTION according to id, or secondly name.
-    entries in accROLE_accACTION_accARGUMENT will also be removed.
+def acc_delete_action(id_action=None, name=None):
+    """Deletes action according to its id or name.
 
-      id_action - id of action to be deleted, prefered variable
+    Entries in `accROLE_accACTION_accARGUMENT` will be also removed.
 
-    name_action - this is used if id_action is not given
+    :param id_action: id of action to be deleted
+    :param name: name of action to be deleted is used when id is not given
 
-    if the name or id is wrong, the function does nothing
+    :return: if the name or id is wrong, the function does nothing
     """
-    id_action = id_action or acc_get_action_id(name_action=name_action)
-    if not id_action:
+    try:
+        where = ((AccACTION.id == id_action) if id_action is not None else
+                 (AccACTION.name == name))
+        actions = db.session.query(AccACTION.id).filter(where)
+        AccAuthorization.query.filter(
+            AccAuthorization.id_accACTION.in_(actions.subquery())
+        ).delete(synchronize_session=False)
+        actions.delete(synchronize_session=False)
+        db.session.commit()
+        return 1
+    except Exception:
         return 0
-
-    # delete the action
-    if run_sql("""DELETE FROM accACTION WHERE id=%s""", (id_action, )):
-        # delete all entries related
-        return 1 + run_sql("""DELETE FROM accROLE_accACTION_accARGUMENT WHERE
-            id_accACTION=%s""", (id_action, ))
-    else:
-        return 0
-
-
-def acc_verify_action(name_action='', description='', allowedkeywords='',
-        dummy=''):
-    """check if all the values of a given action are the same as
-    those in accACTION in the database. self explanatory parameters.
-
-    return id if identical, 0 if not. """
-
-    id_action = acc_get_action_id(name_action=name_action)
-
-    if not id_action:
-        return 0
-
-    res_desc = acc_get_action_description(id_action=id_action)
-    res_keys = acc_get_action_keywords_string(id_action=id_action)
-
-    bool_desc = res_desc == description and 1 or 0
-    bool_keys = res_keys == allowedkeywords and 1 or 0
-    bool_opti = acc_get_action_is_optional(id_action=id_action)
-
-    return bool_desc and bool_keys and bool_opti and id_action or 0
 
 
 def acc_update_action(id_action=0, name_action='', verbose=0, **update):
@@ -993,34 +969,33 @@ def acc_delete_role_action(id_role=0, id_action=0):
 # ACTION RELATED
 
 def acc_get_action_id(name_action):
-    """get id of action when name is given
+    """Get id of action when name is given.
 
-    name_action - name of the wanted action"""
+    :param name_action: Name of the requested action.
+    """
 
     try:
-        return run_sql("""SELECT id FROM accACTION WHERE name = %s""",
-        (name_action, ), run_on_slave=True)[0][0]
-    except (ProgrammingError, IndexError):
+        return db.session.query(AccACTION.id).filter(
+            AccACTION.name==name_action).scalar()
+    except Exception:
         return 0
 
 
 def acc_get_action_name(id_action):
-    """get name of action when id is given. """
-
+    """Get name of action when id is given."""
     try:
-        return run_sql("""SELECT name FROM accACTION WHERE id = %s""",
-            (id_action, ))[0][0]
-    except (ProgrammingError, IndexError):
+        return db.session.query(AccACTION.name).filter(
+            AccACTION.id==id_action).scalar()
+    except Exception:
         return ''
 
 
 def acc_get_action_description(id_action):
-    """get description of action when id is given. """
-
+    """Get description of action when id is given."""
     try:
-        return run_sql("""SELECT description FROM accACTION WHERE id = %s""",
-            (id_action, ))[0][0]
-    except (ProgrammingError, IndexError):
+        return db.session.query(AccACTION.description).filter(
+            AccACTION.id==id_action).scalar()
+    except Exception:
         return ''
 
 
@@ -1087,17 +1062,20 @@ def acc_get_action_details(id_action=0):
 
 
 def acc_get_all_actions():
-    """returns all entries in accACTION."""
-    return run_sql("""SELECT id, name, description
-        FROM accACTION ORDER BY name""")
+    """Returns all entries in accACTION."""
+    return map(lambda acc: (acc.id, acc.name, acc.description),
+               AccACTION.query.order_by(AccACTION.name).all())
+
 
 def acc_get_action_roles(id_action):
     """Returns all the roles connected with an action."""
-    return run_sql("""SELECT DISTINCT(r.id), r.name, r.description
-        FROM accROLE_accACTION_accARGUMENT raa, accROLE r
-        WHERE (raa.id_accROLE = r.id AND raa.id_accACTION = %s) OR r.name = %s
-        ORDER BY r.name """, (id_action, SUPERADMINROLE))
-
+    return map(
+        lambda acc: (acc.id, acc.name, acc.description),
+        AccROLE.query.outerjoin('authorizations').filter(db.or_(
+            AccAuthorization.id_accACTION == id_action,
+            AccROLE.name == SUPERADMINROLE,
+        )).order_by(AccROLE.name)
+    )
 
 # ROLE RELATED
 
@@ -1337,7 +1315,7 @@ def acc_find_user_role_actions(user_info):
         # Let's check if user is superadmin
         id_superadmin = acc_get_role_id(SUPERADMINROLE)
         if id_superadmin in acc_get_user_roles_from_user_info(user_info):
-            return [(SUPERADMINROLE, action[1]) \
+            return [(SUPERADMINROLE, action.name) \
                                         for action in acc_get_all_actions()]
 
         query = """SELECT DISTINCT r.name, a.name
@@ -1368,7 +1346,7 @@ def acc_find_user_role_actions(user_info):
                 deserialize(role_definition)):
                 if role_name == SUPERADMINROLE:
                     # Ok, every action. There's no need to go on :-)
-                    return [(id_superadmin, action[0]) for action in acc_get_all_actions()]
+                    return [(id_superadmin, action.id) for action in acc_get_all_actions()]
                 res4.append((role_name, action_name))
         return list(set(res2) | set(res4))
     else:
