@@ -1,0 +1,134 @@
+{#
+## This file is part of Invenio.
+## Copyright (C) 2013, 2014 CERN.
+##
+## Invenio is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation; either version 2 of the
+## License, or (at your option) any later version.
+##
+## Invenio is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with Invenio; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+{% extends "visualizations/view.html" %}
+
+{% block header %}
+  {{ super() }}
+  <style>
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar:hover {
+      fill: brown;
+    }
+
+    .axis {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+      display: none;
+    }
+
+  </style>
+{% endblock header %}
+
+{% block visualization %}
+  <div id="barchart"></div>
+  {{ super() }}
+{% endblock %}
+
+{% block javascript %}
+  {{ super() }}
+  <script type="text/javascript" src="http://mbostock.github.com/d3/d3.min.js"></script>
+  <script type="text/javascript">
+
+    /* See http://bl.ocks.org/mbostock/3885304 */
+
+    (function($) {
+      var resource = "{{ visualization['resource'] }}";
+
+      var margin = {top: 20, right: 20, bottom: 30, left: 40},
+          width = 960 - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
+
+      var x = d3.scale.ordinal()
+          .rangeRoundBands([0, width], .1);
+
+      var y = d3.scale.linear()
+          .range([height, 0]);
+
+      var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("bottom");
+
+      var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left")
+          .ticks(10, "%");
+
+      var svg = d3.select('#barchart').append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      function barchart(data, columns) {
+        var map_x = function(d) { return d[columns[0]["id"]]; },
+            map_y = function(d) { return d[columns[1]["id"]]; };
+
+        x.domain(data.map(map_x));
+        y.domain([0, d3.max(data, map_y)]);
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text(columns[1]["label"]);
+
+        svg.selectAll(".bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function(d) { return x(map_x(d)); })
+            .attr("width", x.rangeBand())
+            .attr("y", function(d) { return y(map_y(d)); })
+            .attr("height", function(d) { return height - y(map_y(d)); });
+
+      };
+
+      function type(d) {
+        d.frequency = +d.frequency;
+        return d;
+      }
+
+      d3.csv(resource, function(data) {
+        barchart(data, {{ visualization['columns']|tojson }});
+      });
+
+    })(jQuery);
+  </script>
+{% endblock javascript %}
