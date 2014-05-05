@@ -33,7 +33,10 @@ if sys.hexversion < 0x2040000:
     from sets import Set as set
     # pylint: enable=W0622
 
+from flask import current_app
 from six import iteritems
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.local import LocalProxy
 
 from invenio.base.i18n import gettext_set_language
@@ -78,10 +81,6 @@ def acc_add_action(name='', description='', optional='no',
 
     if not allowedkeywords:
         optional = 'no'
-        allowedkeywords = ''
-    else:
-        # create keyword string
-        allowedkeywords = ','.join(allowedkeywords)
 
     # insert the new entry
     try:
@@ -92,7 +91,8 @@ def acc_add_action(name='', description='', optional='no',
         db.session.commit()
         return (acc.id, acc.name, acc.description, acc.allowedkeywords,
             acc.optional)
-    except ProgrammingError:
+    except: # IntegrityError:
+        db.session.rollback()
         return 0
 
 
@@ -116,7 +116,7 @@ def acc_delete_action(id_action=None, name=None):
         actions.delete(synchronize_session=False)
         db.session.commit()
         return 1
-    except Exception:
+    except IntegrityError:
         return 0
 
 
@@ -455,114 +455,87 @@ def acc_add_authorization(name_role='', name_action='', optional=0, **keyval):
     **keyval - dictionary of keyword=value pairs, used to find ids. """
 
     inserted = []
-
     # check that role and action exist
-    id_role = run_sql("""SELECT id FROM accROLE where name = %s""",
-        (name_role, ))
-    action_details = run_sql("""SELECT id,name,description,allowedkeywords,optional from accACTION where name = %s """,
-        (name_action, ))
-    if not id_role or not action_details:
+    try:
+        role = AccROLE.query.filter_by(name=name_role).one()
+        action = AccACTION.query.filter_by(name=name_action).one()
+    except (MultipleResultsFound, NoResultFound):
         return []
 
-    # get role id and action id and details
-    id_role, id_action = id_role[0][0], action_details[0][0]
-    allowedkeywords_str = action_details[0][3]
-
-    allowedkeywords_lst = acc_get_action_keywords(id_action=id_action)
-    optional_action = action_details[0][4] == 'yes' and 1 or 0
+    optional_action = action.optional == 'yes' and 1 or 0
     optional = int(optional)
 
     # this action does not take arguments
     if not optional and not keyval:
         # can not add if user is doing a mistake
-        if allowedkeywords_str:
+        if len(action.allowedkeywords) > 0:
             return []
-        # check if entry exists
-        if not run_sql("""SELECT id_accROLE FROM accROLE_accACTION_accARGUMENT
-                       WHERE id_accROLE = %s AND id_accACTION = %s AND
-                       argumentlistid = %s AND id_accARGUMENT = %s""",
-                       (id_role, id_action, 0, 0)):
+        try:
             # insert new authorization
-            run_sql("""INSERT INTO accROLE_accACTION_accARGUMENT (id_accROLE,
-                         id_accACTION, id_accARGUMENT, argumentlistid)
-                       VALUES (%s, %s, %s, %s)""", (id_role, id_action, 0, 0))
-            return [[id_role, id_action, 0, 0], ]
-        return []
-
+            db.session.add(AccAuthorization(
+                action=action, role=role, id_accARGUMENT=0, argumentlistid=0
+            ))
+            db.session.commit()
+            return [[role.id, action.id, 0, 0], ]
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception(e)
+            return []
 
     # try to add authorization without the optional arguments
     elif optional:
         # optional not allowed for this action
         if not optional_action:
+            print('not optional')
             return []
-        # check if authorization already exists
-        if not run_sql("""SELECT id_accROLE FROM accROLE_accACTION_accARGUMENT
-        WHERE id_accROLE = %s AND
-        id_accACTION = %s AND
-        id_accARGUMENT = -1 AND
-        argumentlistid = -1""" % (id_role, id_action, )):
+        try:
             # insert new authorization
-            run_sql("""INSERT INTO accROLE_accACTION_accARGUMENT (id_accROLE,
-                id_accACTION, id_accARGUMENT, argumentlistid)
-                VALUES (%s, %s, -1, -1) """, (id_role, id_action))
-            return [[id_role, id_action, -1, -1], ]
-        return []
-
+            db.session.add(AccAuthorization(
+                action=action, role=role, id_accARGUMENT=-1, argumentlistid=-1
+            ))
+            db.session.commit()
+            return [[role.id, action.id, 0, 0], ]
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            current_app.logger.exception(e)
+            return []
 
     else:
         # regular authorization
 
         # get list of ids, if they don't exist, create arguments
-        id_arguments = []
-        argstr = ''
-        for key in keyval.keys():
-            if key not in allowedkeywords_lst:
-                return []
-            id_argument = (acc_get_argument_id(key, keyval[key])
-                or
-                run_sql("""INSERT INTO accARGUMENT (keyword, value) values
-                    (%s, %s) """, (key, keyval[key])))
-            id_arguments.append(id_argument)
-            argstr += (argstr and ',' or '') + str(id_argument)
+        if len(set(keyval.keys()) - set(action.allowedkeywords)) > 0:
+            return []
 
-        # check if equal authorization exists
-        for (id_trav, ) in run_sql("""SELECT DISTINCT argumentlistid FROM
-                accROLE_accACTION_accARGUMENT WHERE id_accROLE = %s AND
-                id_accACTION = %s """, (id_role, id_action)):
-            listlength = run_sql("""SELECT COUNT(*) FROM
-                accROLE_accACTION_accARGUMENT WHERE id_accROLE = %%s AND
-                id_accACTION = %%s AND argumentlistid = %%s AND
-                id_accARGUMENT IN (%s) """ % (argstr),
-                    (id_role, id_action, id_trav))[0][0]
-            notlist = run_sql("""SELECT COUNT(*) FROM
-                accROLE_accACTION_accARGUMENT WHERE id_accROLE = %%s AND
-                id_accACTION = %%s AND argumentlistid = %%s AND
-                id_accARGUMENT NOT IN (%s) """ % (argstr),
-                (id_role, id_action, id_trav))[0][0]
-            # this means that a duplicate already exists
-            if not notlist and listlength == len(id_arguments):
-                return []
+        arguments = AccARGUMENT.query.filter(
+            AccARGUMENT.as_tuple.in_(keyval.items())
+        ).all()
+        arg_map = dict(map(lambda a: (a.as_tuple, a), arguments))
+        for key, value in iteritems(keyval):
+            if (key, value) not in arg_map:
+                argument = AccARGUMENT(keyword=key, value=value)
+                db.session.add(argument)
+                arg_map[(key, value)] = argument
 
         # find new arglistid, highest + 1
-        try:
-            arglistid = 1 + run_sql("""SELECT MAX(argumentlistid) FROM
-                accROLE_accACTION_accARGUMENT WHERE id_accROLE = %s
-                AND id_accACTION = %s""", (id_role, id_action))[0][0]
-        except (IndexError, TypeError):
-            arglistid = 1
-        if arglistid <= 0:
-            arglistid = 1
+        arglistid = 1 + (db.session.query(
+            db.func.max_(AccAuthorization.argumentlistid)
+        ).filter(AccAuthorization.role==role,
+                 AccAuthorization.action==action,
+                 AccAuthorization.argumentlistid >= 0).scalar() or 0)
 
         # insert
-        for id_argument in id_arguments:
-            run_sql("""INSERT INTO accROLE_accACTION_accARGUMENT (id_accROLE,
-                        id_accACTION, id_accARGUMENT, argumentlistid)
-                       VALUES (%s, %s, %s, %s) """,
-                (id_role, id_action, id_argument, arglistid))
-            inserted.append([id_role, id_action, id_argument, arglistid])
+        for kv, argument in iteritems(arg_map):
+            authorization = AccAuthorization(action=action, role=role,
+                                             argument=argument,
+                                             argumentlistid=arglistid)
+            db.session.add(authorization)
+            inserted.append([role.id, action.id, argument.id, arglistid])
 
-
+        db.session.commit()
     return inserted
+
 
 def acc_add_role_action_arguments(id_role=0, id_action=0, arglistid=-1,
         optional=0, verbose=0, id_arguments=[]):
@@ -1735,14 +1708,11 @@ def acc_delete_all_settings():
     """simply remove all data affiliated with webaccess by truncating
     tables accROLE, accACTION, accARGUMENT and those connected. """
 
-    from invenio.ext.sqlalchemy import db
     db.session.commit()
-
-    run_sql("""TRUNCATE accROLE""")
-    run_sql("""TRUNCATE accACTION""")
-    run_sql("""TRUNCATE accARGUMENT""")
-    run_sql("""TRUNCATE user_accROLE""")
-    run_sql("""TRUNCATE accROLE_accACTION_accARGUMENT""")
+    for model in [AccROLE, AccACTION, AccARGUMENT, UserAccROLE,
+                  AccAuthorization]:
+        db.session.execute("TRUNCATE {0}".format(model.__tablename__))
+    db.session.commit()
 
     return 1
 
@@ -1806,7 +1776,8 @@ def acc_add_default_settings(superusers=(),
     insactions = []
     for (name, description, allkeys, optional) in DEF_ACTIONS:
         # try to add action as new
-        action_id = acc_add_action(name, description, optional, allkeys)
+        action_id = acc_add_action(name, description, optional,
+                                   *allkeys.split(','))
         # action with the name exist
         if not action_id:
             action_id = acc_get_action_id(name_action=name)
