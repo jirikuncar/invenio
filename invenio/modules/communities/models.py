@@ -53,12 +53,6 @@ from invenio.config import CFG_SITE_LANG
 from invenio.ext.sqlalchemy import db
 from invenio.ext.template import render_template_to_string
 from invenio.legacy.bibrecord import record_add_field
-from invenio.modules.access.models import \
-    AccACTION, \
-    AccROLE, \
-    AccARGUMENT, \
-    AccAuthorization, \
-    UserAccROLE
 from invenio.modules.accounts.models import User
 from invenio.modules.communities.signals import before_save_collection, \
     after_save_collection, before_save_collections, after_save_collections, \
@@ -605,6 +599,12 @@ class Community(db.Model):
         Create or update authorization for user to view the provisional
         collection.
         """
+        from invenio.modules.access.models import \
+            AccACTION, \
+            AccROLE, \
+            AccARGUMENT, \
+            AccAuthorization, \
+            UserAccROLE
         # Role - use Community id, because role name is limited to 32 chars.
         role_name = 'coll_%s' % collection_id
         role = AccROLE.query.filter_by(name=role_name).first()
@@ -746,6 +746,11 @@ class Community(db.Model):
         """
         Delete all objects related to a single collection
         """
+        from invenio.modules.access.models import \
+            AccROLE, \
+            AccARGUMENT, \
+            AccAuthorization, \
+            UserAccROLE
         # Most of the logic in this method ought to be moved to a
         # Collection.delete() method.
         c = getattr(self, "collection_provisional"

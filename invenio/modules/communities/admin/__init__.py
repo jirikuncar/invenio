@@ -15,21 +15,22 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+
 from __future__ import absolute_import
 
 from invenio.ext.admin.views import ModelView
 from invenio.ext.sqlalchemy import db
-from invenio.modules.communities.models import Community
-from flask.ext.admin import expose
+
 
 class CommunitiesAdmin(ModelView):
-    #acc_edit_action = 'cfgmymodel'
+    # acc_edit_action = 'cfgmymodel'
 
     _can_create = True
     _can_edit = True
     _can_delete = True
 
-    column_list = ('id', 'title', 'description', 'page', 'last_modified', 'ranking', 'fixed_points')
+    column_list = ('id', 'title', 'description', 'page', 'last_modified',
+                   'ranking', 'fixed_points')
     column_searchable_list = ('title',)
 
     page_size = 100
@@ -37,7 +38,9 @@ class CommunitiesAdmin(ModelView):
     def __init__(self, model, session, **kwargs):
         super(CommunitiesAdmin, self).__init__(model, session, **kwargs)
 
+
 def register_admin(app, admin):
+    from invenio.modules.communities.models import Community
     admin.add_view(CommunitiesAdmin(Community,
                                     db.session,
                                     name='Communities',
