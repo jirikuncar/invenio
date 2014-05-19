@@ -136,7 +136,29 @@ class UserAccROLE(db.Model):
     expiration = db.Column(db.DateTime, nullable=False,
                            server_default='9999-12-31 23:59:59')
     # user = db.relationship(User, backref='roles')
-    role = db.relationship(AccROLE, backref='users')
+    user = db.relationship(User, backref=db.backref(
+        "user_roles",
+        collection_class=attribute_mapped_collection("role"),
+        cascade="all, delete-orphan"
+    ))
+    accROLE = db.relationship(AccROLE, backref='users')
+
+    role = association_proxy('accROLE', 'name')
+
+    @classmethod
+    def creator(cls, role, expiration=None):
+        """Attach role to user."""
+        try:
+            accROLE = AccROLE.query.filter_by(name=role).one()
+        except:
+            accROLE = AccROLE(name=role)
+        return cls(accROLE=accROLE, expiration=expiration)
+
+User.roles = association_proxy(
+    'user_roles',
+    'expiration',
+    creator=UserAccROLE.creator,
+)
 
 __all__ = ['AccACTION',
            'AccARGUMENT',

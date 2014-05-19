@@ -16,6 +16,6 @@
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 331, Boston, MA 02111-1307, USA.
 
-from .admin import blueprint as admin_blueprint
+#from .admin import blueprint as admin_blueprint
 
-blueprints = [admin_blueprint]
+#blueprints = [admin_blueprint]

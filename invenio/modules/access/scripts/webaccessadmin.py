@@ -86,6 +86,7 @@ def main():
             elif opt[0] in ("-c", "--compile"):
                 options["compile"] = 1
             elif opt[0] in ("-D", "--demo"):
+                print("Demo data are always automatically loaded.")
                 options["demo"] = 1
             else:
                 usage(1)

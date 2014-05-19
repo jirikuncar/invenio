@@ -22,7 +22,9 @@
 # General imports.
 from invenio.ext.sqlalchemy import db
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_utils.types.choice import ChoiceType
+
 # Create your models here.
 
 

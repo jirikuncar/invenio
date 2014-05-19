@@ -43,7 +43,7 @@ from invenio.base.i18n import gettext_set_language
 from invenio.config import CFG_SITE_ADMIN_EMAIL, CFG_SITE_LANG, CFG_SITE_RECORD
 from invenio.modules.access.local_config import CFG_ACC_EMPTY_ROLE_DEFINITION_SER, \
     CFG_ACC_EMPTY_ROLE_DEFINITION_SRC, DELEGATEADDUSERROLE, SUPERADMINROLE, \
-    DEF_USERS, DEF_ROLES, DEF_AUTHS, DEF_ACTIONS, CFG_ACC_ACTIVITIES_URLS
+    DEF_USERS, DEF_AUTHS, DEF_ACTIONS, CFG_ACC_ACTIVITIES_URLS
 from invenio.legacy.dbquery import run_sql, ProgrammingError
 from invenio.modules.access.firerole import compile_role_definition, \
     acc_firerole_check_user, serialize, deserialize, load_role_definition
@@ -51,6 +51,8 @@ from intbitset import intbitset
 from invenio.ext.sqlalchemy import db
 from invenio.modules.access.models import AccAuthorization, AccACTION, \
                                     AccARGUMENT, UserAccROLE, AccROLE
+
+from . import registry
 
 
 def get_superadminrole_id(name=None):
@@ -1748,7 +1750,8 @@ def acc_add_default_settings(superusers=(),
 
     # add roles
     insroles = []
-    def_roles = dict([(role[0], role[1:]) for role in DEF_ROLES])
+    def_roles = dict([(role.name, (role.description, role.definition))
+                      for role in registry.roles.values()])
     def_roles.update(dict([(role[0], role[1:]) for role in additional_def_roles]))
     for name, (description, firerole_def_src) in iteritems(def_roles):
         # try to add, don't care if description is different
@@ -1767,24 +1770,25 @@ def acc_add_default_settings(superusers=(),
     insuserroles = []
     for user in DEF_USERS:
         insuserroles.append(acc_add_user_role(email=user,
-                                            name_role=SUPERADMINROLE))
+                                              name_role=SUPERADMINROLE))
 
     for user, role in additional_def_user_roles:
         insuserroles.append(acc_add_user_role(email=user, name_role=role))
 
     # add actions
     insactions = []
-    for (name, description, allkeys, optional) in DEF_ACTIONS:
+    for (name, description, allkeys, optional) in map(
+            lambda a: (a.name, a.description, a.allowedkeywords, a.optional),
+            registry.actions.values()):
         # try to add action as new
-        action_id = acc_add_action(name, description, optional,
-                                   *allkeys.split(','))
+        action_id = acc_add_action(name, description, optional, allkeys)
         # action with the name exist
         if not action_id:
             action_id = acc_get_action_id(name_action=name)
             # update the action, necessary updates to the database
             # will also be done
             acc_update_action(id_action=action_id, optional=optional,
-                allowedkeywords=allkeys)
+                              allowedkeywords=allkeys)
         # keep track of inserted actions
         insactions.append([action_id, name, description, allkeys])
 
@@ -1793,14 +1797,14 @@ def acc_add_default_settings(superusers=(),
     def_auths = list(DEF_AUTHS) + list(additional_def_auths)
     for (name_role, name_action, args) in def_auths:
         # add the authorization
-        optional = not args and acc_get_action_is_optional(acc_get_action_id(name_action))
+        optional = not args and acc_get_action_is_optional(
+            acc_get_action_id(name_action))
         acc_add_authorization(name_role=name_role,
-                                         name_action=name_action,
-                                         optional=optional,
-                                         **args)
+                              name_action=name_action,
+                              optional=optional,
+                              **args)
         # keep track of inserted authorizations
         insauths.append([name_role, name_action, args])
-
 
     return insroles, insactions, insuserroles, insauths
 
