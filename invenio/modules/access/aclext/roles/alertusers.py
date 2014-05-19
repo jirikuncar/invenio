@@ -20,3 +20,5 @@
 """Users who can use alerts"""
 
 definition = "allow any"
+
+authorizations = [{"action": "usealerts", "arguments": {}}, ]

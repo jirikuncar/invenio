@@ -20,3 +20,5 @@
 """Users who can use messages"""
 
 definition = "allow any"
+
+authorizations = [{"action": "usemessages", "arguments": {}}, ]

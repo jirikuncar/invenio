@@ -20,3 +20,5 @@
 """Users who can use baskets"""
 
 definition = "allow any"
+
+authorizations = [{"action": "usebaskets", "arguments": {}}, ]

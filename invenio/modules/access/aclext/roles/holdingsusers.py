@@ -20,3 +20,5 @@
 """Users who can view holdings"""
 
 definition = "allow any"
+
+authorizations = [{"action": "viewholdings", "arguments": {}}, ]

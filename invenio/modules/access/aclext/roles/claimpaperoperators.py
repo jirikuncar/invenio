@@ -20,3 +20,10 @@
 """Users who can perform changes to _all_ paper attributions without the need for an operator's approval"""
 
 definition = "deny any"
+
+authorizations = [{"action": "claimpaper_view_pid_universe", "arguments": {}},
+                  {"action": "claimpaper_claim_own_papers", "arguments": {}},
+                  {"action": "claimpaper_claim_others_papers", "arguments": {}},
+                  {"action": "claimpaper_change_own_data", "arguments": {}},
+                  {"action": "claimpaper_change_others_data", "arguments": {}},
+                  ]

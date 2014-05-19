@@ -20,3 +20,8 @@
 """Users who can perform changes to their own paper attributions without the need for an operator's approval"""
 
 definition = "allow any"
+
+authorizations = [{"action": "claimpaper_view_pid_universe", "arguments": {}},
+                  {"action": "claimpaper_claim_own_papers", "arguments": {}},
+                  {"action": "claimpaper_change_own_data", "arguments": {}},
+                  ]

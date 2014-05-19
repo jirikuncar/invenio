@@ -20,3 +20,5 @@
 """Users who can view statistics"""
 
 definition = "allow any"
+
+authorizations = [{"action": "viewstatistics", "arguments": {}}, ]

@@ -20,3 +20,5 @@
 """Users who can use loans"""
 
 definition = "allow any"
+
+authorizations = [{"action": "useloans", "arguments": {}}, ]

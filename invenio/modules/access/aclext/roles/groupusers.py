@@ -20,3 +20,5 @@
 """Users who can use groups"""
 
 definition = "allow any"
+
+authorizations = [{"action": "usegroups", "arguments": {}}, ]
