@@ -41,6 +41,7 @@ def preview(recid):
 
     files = BibRecDocs(recid).list_latest_files(list_hidden=False)
     filename = request.args.get('filename', type=str)
+    plugin = request.args.get('plugin', type=str)
 
     for f in files:
         if f.name + f.superformat == filename or filename is None:
@@ -51,6 +52,9 @@ def preview(recid):
                 ordered = OrderedDict.fromkeys(
                     cfg["CFG_PREVIEW_PREFERENCE"][f.superformat] +
                     ordered).keys()
+
+            if plugin in previewers and previewers[plugin]['can_preview'](f):
+                return previewers[plugin]['preview'](f)
 
             for plugin_id in ordered:
                 if previewers[plugin_id]['can_preview'](f):
