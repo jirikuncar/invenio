@@ -394,7 +394,9 @@ define(function(require, exports, module) {
    * Save field value value
    */
   function save_field(url, name, value) {
-      save_data(url, {name: value})
+    var request_data = {};
+    request_data[name] = value;
+    save_data(url, request_data);
   }
   /**
    * Save field value value
@@ -1138,7 +1140,8 @@ define(function(require, exports, module) {
   }
 
   module.exports = function(config){
-    init_plupload(config.plupload);
+    //init_plupload(config.plupload);
+
     init_save(config.urls.save_all_url, '.form-save', '#submitForm');
     init_submit(config.urls.complete_url, '.form-submit', '#submitForm', '#form-submit-dialog');
     init_inputs('#submitForm input, #submitForm textarea, #submitForm select', config.urls.save_url);
@@ -1150,12 +1153,13 @@ define(function(require, exports, module) {
     // Fix issue with typeahead.js drop-down partly cut-off due to overflow ???
     $('#webdeposit_form_accordion').on('hide', function (e) {
       $(e.target).css("overflow","hidden");
-    })
+    });
     $('#webdeposit_form_accordion').on('shown', function (e) {
       $(e.target).css("overflow", "visible");
-    })
+    });
     $('#webdeposit_form_accordion .panel-collapse.in.collapse').css("overflow", "visible");
     // Initialize jquery_plugins
     $(config.datepicker.element).datepicker({dateFormat: config.datepicker.format});
-  }
-})
+
+  };
+});

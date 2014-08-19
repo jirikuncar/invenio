@@ -86,7 +86,7 @@ var date_options = {dateFormat: 'yy-mm-dd'}
 </script>
 {%- endblock form_script_options %}
 <script type="text/javascript">
-require(["jquery", "js/deposit/form"], function($, form) {
+require(["jquery", "js/deposit/plupload", "js/deposit/form"], function($, form) {
     $(function(){
       var save_url = '{{ url_for(".save", deposition_type=deposition_type, uuid=uuid, draft_id=draft.id) }}';
       var save_all_url = '{{ url_for(".save", deposition_type=deposition_type, uuid=uuid, draft_id=draft.id, all='1') }}';
@@ -94,20 +94,6 @@ require(["jquery", "js/deposit/form"], function($, form) {
       var autocomplete_url = '{{ url_for(".autocomplete", deposition_type=deposition_type, uuid=uuid, draft_id=draft.id, field_name="__FIELDNAME__") }}';
 
       var configuration = {
-          plupload: {
-            max_size: '{{config.DEPOSIT_MAX_UPLOAD_SIZE|default('10mb')}}',
-            selector:'.pluploader',
-            save_url: save_url,
-            url: '{{ url_for('.upload_file', deposition_type=deposition_type, uuid=uuid) }}',
-            delete_url: '{{ url_for('.delete_file', deposition_type=deposition_type, uuid=uuid) }}',
-            get_file_url: '{{ url_for('.get_file', deposition_type=deposition_type, uuid=uuid) }}',
-            db_files: {{ form.files|safe }},
-            dropbox_url: '{{ url_for('.upload_url', deposition_type=deposition_type, uuid=uuid) }}'
-            // Those are missing
-            // uuid:,
-            // newdep_url:,
-            // continue_url
-          },
           urls: {
             save_url: save_url,
             save_all_url: save_all_url,
@@ -121,6 +107,19 @@ require(["jquery", "js/deposit/form"], function($, form) {
       }
       // Initialize form
       form(configuration);
+      $('.pluploader').pluploadWidget({
+        max_file_size: '{{config.DEPOSIT_MAX_UPLOAD_SIZE|default('10mb')}}',
+        save_url: save_url,
+        url: '{{ url_for('.upload_file', deposition_type=deposition_type, uuid=uuid) }}',
+        delete_url: '{{ url_for('.delete_file', deposition_type=deposition_type, uuid=uuid) }}',
+        get_file_url: '{{ url_for('.get_file', deposition_type=deposition_type, uuid=uuid) }}',
+        dropbox_url: '{{ url_for('.upload_url', deposition_type=deposition_type, uuid=uuid) }}',
+        files: {{ form.files|safe }},
+        // Those are missing
+        // uuid:,
+        // newdep_url:,
+        // continue_url
+      });
     });
 });
 </script>
