@@ -15,15 +15,17 @@
     along with Invenio; if not, write to the Free Software Foundation, Inc.,
     59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
+.. _introduction-features:
+
 Features
-========
+--------
 
 .. image:: /_static/snap1.gif
    :width: 200 px
    :align: left
 
 Navigable collection tree
--------------------------
+`````````````````````````
 
 * Documents organised in collections
 * Regular and virtual collection trees
@@ -35,7 +37,7 @@ Navigable collection tree
    :align: left
 
 Powerful search engine
-----------------------
+``````````````````````
 
 * Specially designed indexes to provide fast search speed for repositories of up to 2,000,000 records
 * Customizable simple and advanced search interfaces
@@ -47,7 +49,7 @@ Powerful search engine
    :align: left
 
 Flexible metadata
------------------
+`````````````````
 
 * Standard metadata format (MARC)
 * Handling articles, books, theses, photos, videos, museum objects and more
@@ -58,7 +60,7 @@ Flexible metadata
    :align: left
 
 User personalization
---------------------
+````````````````````
 
 * user-defined document baskets
 * user-defined automated email notification alerts
@@ -70,6 +72,6 @@ User personalization
    :align: left
 
 Multiple output formats
------------------------
+```````````````````````
 
 To find out more about Invenio's features, please check the general :ref:`api` page.

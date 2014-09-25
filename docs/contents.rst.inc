@@ -15,6 +15,44 @@
     along with Invenio; if not, write to the Free Software Foundation, Inc.,
     59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
+
+.. _introduction:
+
+Introduction
+============
+
+.. toctree::
+   :maxdepth: 1
+
+   introduction/about
+   introduction/features
+   introduction/numbering
+
+
+.. _installation:
+
+Installation
+============
+
+.. toctree::
+   :maxdepth: 1
+
+   installation/quickstart
+
+
+.. _upgrades:
+
+Upgrades
+========
+
+.. toctree::
+   :maxdepth: 1
+
+   upgrades/index
+   upgrades/how-to-upgrade-site
+   upgrades/how-to-create-recipes
+
+
 Getting Started
 ===============
 
