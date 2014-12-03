@@ -69,6 +69,7 @@ PACKAGES_EXCLUDE = [
     'invenio.modules.pages',
     'invenio.modules.linkbacks',
     'invenio.modules.multimedia',
+    'invenio.modules.relationships',
 ]
 
 LEGACY_WEBINTERFACE_EXCLUDE = [
