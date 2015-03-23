@@ -23,7 +23,7 @@
     Jinja2 templates.
 """
 
-from markupsafe import Markup as jinja2_Markup, escape as jinja2_escape
+from markupsafe import escape as jinja2_escape
 
 
 def setup_app(app):
@@ -31,19 +31,19 @@ def setup_app(app):
     Jinja2 requires all strings to be unicode objects. Invenio however operates
     with UTF8 encoded str objects. Jinja2 will automatically convert
     non-unicode objects into unicode objects, but via the ascii codec. This
-    function replaces the escape function and Markup class in
-    Jinja2/MarkupSafe, to use the utf8 codec when converting 8-bit str objects
+    function replaces the escape function and text_type class in
+    Jinja2/text_typeSafe, to use the utf8 codec when converting 8-bit str objects
     into unicode objects.
 
-    Ideally Jinja2/MarkupSafe should allow specifying which default encoding to
+    Ideally Jinja2/text_typeSafe should allow specifying which default encoding to
     use when decoding strings. Other alternatives is to decode any str object
     into unicode prior to passing the values to Jinja2 methods. This will
     however require large changes over the entire Invenio codebase, with the
     risk of introducing many errors. This runtime hack is unfortunately
     currently the least intrusive way to fix the str to unicode decoding.
     """
-    # Jinja2 will try to load escape method and Markup class from a variety of
-    # different modules. First it will try from MarkupSafe package, then from
+    # Jinja2 will try to load escape method and text_type class from a variety of
+    # different modules. First it will try from text_typeSafe package, then from
     # jinja2._markupsafe._speedup, then jinja2._markupsafe._native. Ideally, we
     # should only replace the function and class at the implementing module.
     # However, due to Python's package/module loading behaviour, the function
@@ -71,71 +71,50 @@ def setup_app(app):
     jinja2.compiler.escape = utf8escape
     jinja2.escape = utf8escape
 
-    # Markup class replacement in Jinja2 library
-    try:
-        jinja2._markupsafe.Markup = Markup
-    except:
-        pass
-    jinja2.runtime.Markup = Markup
-    jinja2.utils.Markup = Markup
-    jinja2.filters.Markup = Markup
-    jinja2.compiler.Markup = Markup
-    jinja2.Markup = Markup
-    jinja2.nodes.Markup = Markup
-    jinja2.ext.Markup = Markup
-    jinja2.environment.Markup = Markup
+    # text_type class replacement in Jinja2 library
+    import markupsafe
+    import markupsafe._compat
+    import markupsafe._native
+    markupsafe.text_type = text_type
+    markupsafe._compat.text_type = text_type
+    markupsafe._native.text_type = text_type
 
-    #import markupsafe
-    #markupsafe.escape = utf8escape
-    #markupsafe.Markup = Markup
+    import jinja2
+    import jinja2._compat
+    import jinja2.compiler
+    import jinja2.environment
+    import jinja2.filters
+    import jinja2.runtime
+    jinja2.text_type = text_type
+    jinja2._compat.text_type = text_type
+    jinja2.compiler.text_type = text_type
+    jinja2.environment.text_type = text_type
+    jinja2.filters.text_type = text_type
+    jinja2.runtime.text_type = text_type
+    jinja2.runtime.to_string = text_type
 
     return app
 
 
 def utf8escape(s):
     """
-    UTF8-8-bit-string-friendly replacement function for MarkupSafe/Jinja2
+    UTF8-8-bit-string-friendly replacement function for text_typeSafe/Jinja2
     escape function.
 
     WARNING: Do not use this method. Use jinja2.escape() instead.
     """
-    #if isinstance(s, str):
-    #    return jinja2_escape(s.decode('utf8'))
-    #return jinja2_escape(s)
-    if hasattr(s, '__html__'):
-        return s.__html__()
-    if not isinstance(s, unicode):
-        s = str(s).encode('utf8')
-    return Markup(unicode(s)
-        .replace('&', '&amp;')
-        .replace('>', '&gt;')
-        .replace('<', '&lt;')
-        .replace("'", '&#39;')
-        .replace('"', '&#34;')
-    )
+    if isinstance(s, str):
+        return jinja2_escape(s.decode('utf8'))
+    return jinja2_escape(s)
 # Ensure function name is identical to replaced function.
 utf8escape.__name__ = jinja2_escape.__name__
 
 
-class Markup(jinja2_Markup):
-    """Markup replacement class.
-
-    Forces the use of utf8 codec for decoding 8-bit strings, in case no
-    encoding is specified.
-
-    WARNING: Do not use this class. Use jinja2.Markup instead.
-    """
+class text_type(unicode):
     def __new__(cls, base=u'', encoding=None, errors='strict'):
-        if encoding is None and isinstance(base, str):
+        if encoding is None and not isinstance(base, unicode):
             encoding = 'utf8'
-        return jinja2_Markup.__new__(cls, base=base, encoding=encoding,
-                                     errors=errors)
-        # TODO
-        if hasattr(base, '__html__'):
-            base = base.__html__()
-        elif encoding is None and not isinstance(base, unicode):
-            #encoding = 'utf8'
-            base = unicode(str(base).encode('utf8'))
-        if encoding is None:
-            return unicode.__new__(cls, base)
-        return unicode.__new__(cls, base, encoding, errors)
+            base = str(base)
+            return unicode.__new__(cls, base, encoding=encoding,
+                                   errors=errors)
+        return unicode.__new__(cls, base)
