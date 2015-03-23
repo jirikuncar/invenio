@@ -23,11 +23,7 @@
     Jinja2 templates.
 """
 
-try:
-    from markupsafe import Markup as jinja2_Markup, escape as jinja2_escape
-except ImportError:
-    from jinja2._markupsafe import Markup as jinja2_Markup, \
-        escape as jinja2_escape
+from markupsafe import Markup as jinja2_Markup, escape as jinja2_escape
 
 
 def setup_app(app):
@@ -89,14 +85,9 @@ def setup_app(app):
     jinja2.ext.Markup = Markup
     jinja2.environment.Markup = Markup
 
-    # Escape/Markup replacement in MarkupSafe library.
-    ## FIXME causes recursive calls in `Markup.__new__` and `escape`
-    #try:
-    #    import markupsafe
-    #    markupsafe.escape = utf8escape
-    #    #markupsafe.Markup = Markup
-    #except ImportError:
-    #    pass
+    #import markupsafe
+    #markupsafe.escape = utf8escape
+    #markupsafe.Markup = Markup
 
     return app
 
@@ -108,16 +99,26 @@ def utf8escape(s):
 
     WARNING: Do not use this method. Use jinja2.escape() instead.
     """
-    if isinstance(s, str):
-        return jinja2_escape(s.decode('utf8'))
-    return jinja2_escape(s)
+    #if isinstance(s, str):
+    #    return jinja2_escape(s.decode('utf8'))
+    #return jinja2_escape(s)
+    if hasattr(s, '__html__'):
+        return s.__html__()
+    if not isinstance(s, unicode):
+        s = str(s).encode('utf8')
+    return Markup(unicode(s)
+        .replace('&', '&amp;')
+        .replace('>', '&gt;')
+        .replace('<', '&lt;')
+        .replace("'", '&#39;')
+        .replace('"', '&#34;')
+    )
 # Ensure function name is identical to replaced function.
 utf8escape.__name__ = jinja2_escape.__name__
 
 
 class Markup(jinja2_Markup):
-    """
-    Markup replacement class
+    """Markup replacement class.
 
     Forces the use of utf8 codec for decoding 8-bit strings, in case no
     encoding is specified.
@@ -129,3 +130,12 @@ class Markup(jinja2_Markup):
             encoding = 'utf8'
         return jinja2_Markup.__new__(cls, base=base, encoding=encoding,
                                      errors=errors)
+        # TODO
+        if hasattr(base, '__html__'):
+            base = base.__html__()
+        elif encoding is None and not isinstance(base, unicode):
+            #encoding = 'utf8'
+            base = unicode(str(base).encode('utf8'))
+        if encoding is None:
+            return unicode.__new__(cls, base)
+        return unicode.__new__(cls, base, encoding, errors)
