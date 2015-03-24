@@ -113,8 +113,10 @@ def utf8escape(s):
 
     WARNING: Do not use this method. Use jinja2.escape() instead.
     """
-    if isinstance(s, str):
-        return jinja2_escape(s.decode('utf8'))
+    if hasattr(s, '__html__'):
+        s = s.__html__()
+    if not isinstance(s, unicode):
+        return jinja2_escape(str(s).decode('utf8'))
     return jinja2_escape(s)
 # Ensure function name is identical to replaced function.
 utf8escape.__name__ = jinja2_escape.__name__
