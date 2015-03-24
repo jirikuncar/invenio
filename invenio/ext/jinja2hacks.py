@@ -140,7 +140,8 @@ class Markup(jinja2_Markup):
     WARNING: Do not use this class. Use jinja2.Markup instead.
     """
     def __new__(cls, base=u'', encoding=None, errors='strict'):
-        if encoding is None and isinstance(base, str):
+        if encoding is None and not isinstance(base, unicode):
+            base = str(base)
             encoding = 'utf8'
         return jinja2_Markup.__new__(cls, base=base, encoding=encoding,
                                      errors=errors)
