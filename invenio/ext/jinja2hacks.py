@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is part of Invenio.
-# Copyright (C) 2012, 2013 CERN.
+# Copyright (C) 2012, 2013, 2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -15,15 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-"""
-    invenio.ext.jinja2hacks
-    -----------------------
 
-    This module fixes problems with passing legacy Invenio str objects to
-    Jinja2 templates.
-"""
+"""Add support for UTF-8 in Jinja2 templates."""
 
-from markupsafe import escape as jinja2_escape
+from markupsafe import Markup as jinja2_Markup, escape as jinja2_escape
 
 
 def setup_app(app):
@@ -93,6 +88,21 @@ def setup_app(app):
     jinja2.runtime.text_type = text_type
     jinja2.runtime.to_string = text_type
 
+    # Markup class replacement in Jinja2 library
+    try:
+        jinja2._markupsafe.Markup = Markup
+    except:
+        pass
+    jinja2.runtime.Markup = Markup
+    jinja2.utils.Markup = Markup
+    jinja2.filters.Markup = Markup
+    jinja2.compiler.Markup = Markup
+    jinja2.Markup = Markup
+    jinja2.nodes.Markup = Markup
+    jinja2.ext.Markup = Markup
+    jinja2.environment.Markup = Markup
+
+
     return app
 
 
@@ -118,3 +128,19 @@ class text_type(unicode):
             return unicode.__new__(cls, base, encoding=encoding,
                                    errors=errors)
         return unicode.__new__(cls, base)
+
+
+class Markup(jinja2_Markup):
+    """
+    Markup replacement class
+
+    Forces the use of utf8 codec for decoding 8-bit strings, in case no
+    encoding is specified.
+
+    WARNING: Do not use this class. Use jinja2.Markup instead.
+    """
+    def __new__(cls, base=u'', encoding=None, errors='strict'):
+        if encoding is None and isinstance(base, str):
+            encoding = 'utf8'
+        return jinja2_Markup.__new__(cls, base=base, encoding=encoding,
+                                     errors=errors)
