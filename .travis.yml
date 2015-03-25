@@ -42,6 +42,14 @@ before_install:
   - "sudo apt-get update"
   - "python requirements.py > .travis-lowest-requirements.txt"
   - "touch .travis-release-requirements.txt"
+  - "pip install --egg pyenv"
+  - export PATH="$HOME/.pyenv/bin:$PATH"
+  - eval "$(pyenv init -)"
+  - eval "$(pyenv virtualenv-init -)"
+  - "pyenv install 2.7.8"
+  - "pyenv global 2.7.8"
+  - "python --version"
+  - "pip install --upgrade pip mock"
 
 install:
   - "sudo apt-get -qy install apache2 libapache2-mod-wsgi libapache2-mod-xsendfile ssl-cert poppler-utils git subversion nodejs --fix-missing"
