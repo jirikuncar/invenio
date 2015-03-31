@@ -98,7 +98,7 @@ search_also, with context -%}
   {%- block index_right -%}
   {% if collection.collection_children_r %}
     <div class="col-md-{{ '4' if collection.collection_children_v else '8' }} collection clearfix">
-      <h4>{{ collection.get_collectionbox_name(box_type='r') }}</h4>
+      <h4>{{ collection.get_collectionbox_name(box_type='r')|u }}</h4>
       {{ collection_tree(collection.collection_children_r, limit=2, class="nav nav-list clearfix") }}
     </div>
   {% else %}
@@ -108,13 +108,13 @@ search_also, with context -%}
       {% else %}
         {% if collection.reclist %}
         <div class="page-header">
-          <h3>{{ collection.name + ":" }}</h3>
+          <h3>{{ collection.name|u }}:</h3>
         </div>
         {% for recid in collection.reclist[-10:]|reverse %}
         <div class="row">
           <div class="col-md-12">
-            {{ format_record(recid, of, ln=g.ln)|safe }}
-            {{ '<hr/>'|safe if not loop.last }}
+            {{ format_record(recid, of, ln=g.ln)|safe|u }}
+            {{ '<hr/>'|safe|u if not loop.last }}
           </div>
         </div>
         {% endfor %}

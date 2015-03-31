@@ -1,6 +1,6 @@
 {#
 # This file is part of Invenio.
-# Copyright (C) 2012, 2013, 2014 CERN.
+# Copyright (C) 2012, 2013, 2014, 2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -98,24 +98,24 @@
 {%- set macrokwargs = kwargs %}
 {%- block collection_tree scoped %}
 {%- set idxs = [0] -%}
-<ul {{ macrokwargs|xmlattr }}>
+<ul {{ macrokwargs|xmlattr|u }}>
 {% for collection in collections recursive %}
   <li>
     {# Do not show checkboxes in new UI
     {% if idxs|length == 1 %}
-    <input type="checkbox" name="c" value="{{ collection.name }}" checked/>
+    <input type="checkbox" name="c" value="{{ collection.name|u }}" checked/>
     {% endif %}
     #}
     <a href="{{ url_for(".collection", name=collection.name, ln=g.ln, _external=True) }}">
-      {{ collection.name_ln }}
+      {{ collection.name_ln|u }}
     </a>
     <small class="text-muted">({{ collection.nbrecs }})</small>&nbsp;
   {% if collection.collection_children and idxs|length < limit %}
     {%- do idxs.append(loop.index) -%}
-    <ul {{ macrokwargs|xmlattr }}>
+    <ul {{ macrokwargs|xmlattr|u }}>
       {{ loop(collection.collection_children) }}
     </ul>
-    {%- do idxs.pop() -%}
+    {%- do idxs.pop()|u -%}
   {% endif %}
   </li>
 {% endfor %}
@@ -125,7 +125,7 @@
 
 {% macro portalbox_sidebar(portalboxes, width=2) %}{% set macrokwargs = kwargs %}{% block portalbox_sidebar scoped %}
   {% if portalboxes %}
-  <div {{ macrokwargs|xmlattr }}>
+  <div {{ macrokwargs|xmlattr|u }}>
     {% for cp in portalboxes %}
     <div class="panel panel-default">
       <div class="panel-body">
@@ -155,7 +155,7 @@
 
   {%- for name in ['rg', 'of', 'so', 'sf', 'rm'] -%}
   {%- if request.args.get(name) -%}
-  <input type="hidden" name="{{ name }}" value="{{ request.args.get(name, '') }}" />
+  <input type="hidden" name="{{ name|u }}" value="{{ request.args.get(name, '') }}" />
   {%- endif -%}
   {%- endfor -%}
 
@@ -166,7 +166,7 @@
   {% block _search_simple_box scoped %}
     {% for f in easy_search_form if not f.name=='csrf_token' %}
     <div class="form-group">
-      <label class="col-md-2 col-sm-3 control-label" for="{{ f.label.field_id }}">
+      <label class="col-md-2 col-sm-3 control-label" for="{{ f.label.field_id|u }}">
         {{ f.label.text }}
       </label>
       <div class="col-md-10 col-sm-9">
@@ -209,8 +209,8 @@
       <div class="col-sm-9 col-md-10">
         <select class="form-control" id="p2" name="f">
           {% for (code, name) in collection.search_within %}
-          <option value="{{ code }}">
-            {{ name }}
+          <option value="{{ code|u }}">
+            {{ name|u }}
           </option>
           {% endfor %}
         </select>
@@ -224,7 +224,7 @@
       <div class="col-sm-9 col-md-10">
         <select name="m1" id="m1" class="form-control">
           {%- for v in config.CFG_WEBSEACH_MATCHING_TYPES|sort(attribute='order') -%}
-            <option value="{{ v.code }}">{{ _(v.title)|safe }}</option>
+            <option value="{{ v.code|u }}">{{ _(v.title)|safe|u }}</option>
           {%- endfor -%}
         </select>
       </div>
@@ -233,20 +233,20 @@
     {% for id, soo in collection.search_options|groupby('id_field') %}
     <hr/>
     <div class="form-group">
-      <label class="control-label col-sm-3 col-md-2" for="{{ soo[0].field.code }}">
-        {{- soo[0].field.name_ln -}}
+      <label class="control-label col-sm-3 col-md-2" for="{{ soo[0].field.code|u }}">
+        {{- soo[0].field.name_ln|u -}}
       </label>
       <div class="col-sm-9 col-md-10">
         <div class="input-group">
           <select class="form-control" id="{{ soo[0].field.code }}" name="{{ soo[0].field.code }}">
             <option value="">*** {{ _('select') }} ***</option>
             {% for so in soo %}
-            <option value="{{ so.fieldvalue.value }}">
-              {{ so.fieldvalue.name }}
+            <option value="{{ so.fieldvalue.value|u }}">
+              {{ so.fieldvalue.name|u }}
             </option>
             {% endfor %}
           </select>
-          <span data-target="p" data-source="{{ soo[0].field.code }}" class="input-group-addon appender">
+          <span data-target="p" data-source="{{ soo[0].field.code|u }}" class="input-group-addon appender">
             <i class="glyphicon glyphicon-ok"></i>
           </span>
         </div>
@@ -339,7 +339,7 @@
           class="btn-sm form-control">
           {%- for i in [10, 25, 50, 100, 250, 500] -%}
             {%- if i <= config.CFG_WEBSEARCH_MAX_RECORDS_IN_GROUPS -%}
-              <option value="{{ i }}"{{ ' selected' if request.args.get('rg',10)==i.__str__() }}>{{ i }} {{ _('results') }}</option>
+              <option value="{{ i }}"{{ ' selected' if request.args.get('rg', 10, type=int)==i }}>{{ i }} {{ _('results') }}</option>
             {%- endif -%}
           {%- endfor -%}
         </select>

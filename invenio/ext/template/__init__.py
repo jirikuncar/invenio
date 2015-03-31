@@ -79,7 +79,7 @@ def inject_utils():
 
     def invenio_url_for(endpoint, **values):
         try:
-            return url_for(endpoint, **values)
+            return url_for(endpoint, **values).decode('utf-8')
         except BuildError:
             if re.match("https?://", endpoint, re.IGNORECASE):
                 return endpoint

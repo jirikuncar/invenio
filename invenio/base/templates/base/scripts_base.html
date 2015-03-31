@@ -20,9 +20,9 @@
 
 {%- for bundle in get_bundle('js') %}
   {%- if config.get("DEBUG") %}
-  <!-- {{ bundle.weight }}: {{ bundle.output }} -->
+  <!-- {{ bundle.weight }}: {{ bundle.output|u }} -->
   {%- endif %}
   {%- assets bundle %}
-  <script type="text/javascript" src="{{ EXTRA.static_url_path }}{{ ASSET_URL }}"></script>
+  <script type="text/javascript" src="{{ EXTRA.static_url_path|u }}{{ ASSET_URL|u }}"></script>
   {%- endassets %}
 {%- endfor %}

@@ -43,7 +43,7 @@
         {%- for item in current_menu.submenu('main').children if item.visible recursive %}
             {%- if item.children -%}
                 <li class="dropdown">.
-                  <a href="{{ item.url }}" style="display: inline-block; padding-right: 5px;"> {{ item.text|safe }} </a>
+                  <a href="{{ item.url|u }}" style="display: inline-block; padding-right: 5px;"> {{ item.text|u|safe }} </a>
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="display: inline-block; padding-left: 5px;">
                     <b class="caret"></b>
                   </a>
@@ -52,7 +52,7 @@
                   </ul>
                 </li>
             {%- else -%}
-            <li><a href="{{ item.url }}">{{ item.text|safe }}</a></li>
+            <li><a href="{{ item.url|u }}">{{ item.text|safe|u }}</a></li>
             {%- endif -%}
         {%- endfor -%}
         </ul>

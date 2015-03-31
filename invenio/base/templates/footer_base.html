@@ -58,9 +58,9 @@
     {%- for (lang, lang_namelong) in config.CFG_LANGUAGE_LIST_LONG %}
         &nbsp;
       {%- if lang != g.ln -%}
-      <a href="?ln={{ lang }}" class="langinfo" hreflang="{{ lang }}">{{ lang_namelong }}</a>
+      <a href="?ln={{ lang|u }}" class="langinfo" hreflang="{{ lang|u }}">{{ lang_namelong|u }}</a>
       {%- else -%}
-        {{ lang_namelong }}
+        {{ lang_namelong|u }}
       {%- endif %}
     {%- endfor %}
   {%- endif -%}

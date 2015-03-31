@@ -19,6 +19,8 @@
 
 """Custom `Jinja2` extensions."""
 
+from __future__ import unicode_literals
+
 import copy
 import os
 import warnings

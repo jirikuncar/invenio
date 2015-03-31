@@ -42,7 +42,7 @@
   {%- if keywords %}<meta name="keywords" content="{{ keywords }}" />{% endif %}
   {%- if config.get('CFG_GOOGLE_SITE_VERIFICATION', None) %}
     {%- for google_id in config.CFG_GOOGLE_SITE_VERIFICATION %}
-  <meta name="google-site-verification" content="{{google_id}}"/>
+  <meta name="google-site-verification" content="{{ google_id }}"/>
     {%- endfor %}
   {%- endif %}
   {%- endblock head_meta %}
@@ -54,17 +54,12 @@
   <link rel="alternate" hreflang="{{ alt_ln }}" href="{{ alternate_url }}"/>
   {%- endfor %}{%- endblock %}
   <link rel="alternate" type="application/rss+xml"
-        {{- ' ' -}}
         title="{{ config.CFG_SITE_NAME }} RSS"
-        {{- ' ' -}}
         href="{{ url_for('rss') }}" />
   <link rel="search" type="application/opensearchdescription+xml"
-        {{- ' ' -}}
         href="{{ url_for('opensearchdescription') }}"
-        {{- ' ' -}}
         title="{{ config.CFG_SITE_NAME }}"/>
   <link rel="unapi-server" type="application/xml" title="unAPI"
-        {{- ' ' -}}
         href="{{ url_for('unapi') }}"/>
   {%- if linkbackTrackbackLink %}{{ linkbackTrackbackLink }}{%- endif %}
   <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -95,7 +90,10 @@
   {%- block css %}{% endblock %}
   {%- endblock head %}
 </head>
-<body{% if body_css_classes %} class="{{ body_css_classes|join(' ') }}"{% endif %}{% if g.ln %} lang="{{ g.ln.split('_', 1)[0]|safe }}"{% if rtl_direction %} {{ rtl_direction|safe }}{% endif %}{% endif %} itemscope itemtype="http://schema.org/WebPage">
+<body{% if body_css_classes %} class="{{ body_css_classes|join(' ')|u }}"{% endif %}
+     {%- if g.ln %} lang="{{ g.ln.split('_', 1)[0]|safe|u }}"
+       {%- if rtl_direction %} {{ rtl_direction|safe|u }}{% endif %}
+     {%- endif %} itemscope itemtype="http://schema.org/WebPage">
 {%- block body_start %}{% endblock body_start %}
 {%- block page_header -%}
   <div id="wrap">
@@ -120,7 +118,7 @@
       {% block title %}
         {% if title %}
           <div class="page-header">
-            <h1>{{ title }}</h1>
+            <h1>{{ title|u }}</h1>
           </div>
         {% endif %}
       {% endblock title %}
