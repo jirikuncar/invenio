@@ -20,10 +20,13 @@
 """Additional extensions and filters for jinja2 module."""
 
 import re
+import warnings
 
 from flask import _request_ctx_stack, g, request, url_for
 
 from flask_login import current_user
+
+from invenio.utils.deprecation import RemovedInInvenio23Warning
 
 from jinja2 import ChoiceLoader
 
@@ -192,6 +195,8 @@ def setup_app(app):
 
         It uses :py:func:`invenio.utils.date.convert_datetext_to_dategui`
         """
+        warnings.warn('Use formatdatetime instead of invenio_format_date.',
+                      RemovedInInvenio23Warning)
         if isinstance(date, datetime):
             return convert_datestruct_to_dategui(
                 date.timetuple(),
@@ -207,6 +212,8 @@ def setup_app(app):
 
         It uses :py:func:`invenio.utils.date.pretty_date`
         """
+        warnings.warn('Use formattimedelta instead of invenio_pretty_date.',
+                      RemovedInInvenio23Warning)
         if isinstance(date, datetime) or isinstance(date, string_types):
             return pretty_date(
                 date, ln=getattr(g, 'ln', app.config['CFG_SITE_LANG']))
