@@ -1,5 +1,5 @@
 content_type: text/html
-default: Default_HTML_references.bft
+default: Default_HTML_references.tpl
 description: Display record references in References tab.
 name: References tab
 rules: []

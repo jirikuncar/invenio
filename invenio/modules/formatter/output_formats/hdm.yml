@@ -1,1 +1,3 @@
-default: Default_HTML_meta.bft
+name: HTML meta
+description: HTML Meta tags suitable to be parsed by search engines (e.g. Google Scholar)
+default: Default_HTML_meta.tpl

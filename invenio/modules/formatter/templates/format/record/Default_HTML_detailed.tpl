@@ -20,37 +20,64 @@
 {% extends "format/record/Default_HTML_detailed_base.tpl" %}
 
 {% block header %}
-    {{ bfe_topbanner(bfo, prefix='<div style="padding-left:10px;padding-right:10px">', suffix='</div><hr/>') }}
-    {{ bfe_title(bfo, separator="<br /><br />") }}
+    {{ record.get('subject.term') | prefix('<div style="padding-left:10px;padding-right:10px">') | suffix('</div><hr/>') }}
+    <h2>{{ record.get('title.title') }}</h2>
 {% endblock %}
 
 {% block details %}
-    {{ bfe_authors(bfo, suffix="<br />", limit="25", interactive="yes", print_affiliations="yes", affiliation_prefix="<small> (", affiliation_suffix=")</small>") }}
-    {{ bfe_addresses(bfo) }}
-    {{ bfe_affiliation(bfo) }}
-    {{ bfe_date(bfo, prefix="<br />", suffix="<br />") }}
-    {{ bfe_publisher(bfo, prefix="<small>", suffix="</small>") }}
-    {{ bfe_place(bfo, prefix="<small>", suffix="</small>") }}
-    {{ bfe_isbn(bfo, prefix="<br />ISBN: ") }}
+   {% if record.get('number_of_authors', 0) > 0 %}
+    <i class="glyphicon glyphicon-user"></i> by
+    {% set authors = record.get('authors[:].full_name', []) %}
+    {% set sep = joiner("; ") %}
+    {% set number_of_displayed_authors = 25 %}
+    {% for full_name in authors[0:number_of_displayed_authors] %} {{ sep() }}
+      <a href="{{ url_for('search.search', p='author:"' + full_name + '"') }}">
+        {{ full_name }}
+      </a>
+    {% endfor %}
+    {% if record.get('number_of_authors', 0) > number_of_displayed_authors %}
+    {{ sep() }}
+    <a href="#authors_{{ record['recid'] }}"
+       class="text-muted" data-toggle="modal"
+       data-target="#authors_{{ record['recid'] }}">
+        <em> {{ _('et al') }}</em>
+    </a>
+    {% endif %}
+    {% endif %}
+    {# bfe_authors(bfo, suffix="<br />", limit="25", interactive="yes", print_affiliations="yes", affiliation_prefix="<small> (", affiliation_suffix=")</small>") #}
+    {# bfe_addresses(bfo) #}
+    {# bfe_affiliation(bfo) #}
+    {# bfe_date(bfo, prefix="<br />", suffix="<br />") #}
+    {# bfe_publisher(bfo, prefix="<small>", suffix="</small>") #}
+    {# bfe_place(bfo, prefix="<small>", suffix="</small>") #}
+    {# bfe_isbn(bfo, prefix="<br />ISBN: ") #}
 {% endblock %}
 
 {% block abstract %}
-    {{ bfe_abstract(bfo, prefix_en="<small><strong>Abstract: </strong>", prefix_fr="<small><strong>R&eacute;sum&eacute;: </strong>", suffix_en="</small><br />", suffix_fr="</small><br />") }}
+    {{ record.get('abstract.summary')|prefix('<strong>' + _('Abstract:') + ' </strong>')  }}
 
-    {{ bfe_keywords(bfo, prefix="<br /><small><strong>Keyword(s): </strong></small>", keyword_prefix="<small>", keyword_suffix="</small>") }}
+    {% if record['keywords']|length %}
+      <strong><i class="glyphicon glyphicon-tag"></i> {{ _('Keyword(s)')}}: </strong>
+      {% for keyword in record['keywords'] %}
+      <span class="label label-default">
+        <a href="{{ url_for('search.search', p='keyword:' + keyword['term']) }}">
+          {{ keyword['term'] }}
+        </a>
+      </span>
+      &nbsp;
+    {% endfor %}
+    {% endif %}
 
-    {{ bfe_notes(bfo, note_prefix="<br /><small><strong>Note: </strong>", note_suffix=" </small>", suffix="<br />") }}
+    {# bfe_notes(bfo, note_prefix="<br /><small><strong>Note: </strong>", note_suffix=" </small>", suffix="<br />") #}
 
-    {{ bfe_publi_info(bfo, prefix="<br /><br /><strong>Published in: </strong>") }}<br />
-    {{ bfe_doi(bfo, prefix="<small><strong>DOI: </strong>", suffix=" </small><br />") }}
+    {# bfe_publi_info(bfo, prefix="<br /><br /><strong>Published in: </strong>") #}<br />
+    {# bfe_doi(bfo, prefix="<small><strong>DOI: </strong>", suffix=" </small><br />") #}
 
-    {{ bfe_plots(bfo, width="200px", caption="no") }}
+    {# bfe_plots(bfo, width="200px", caption="no") #}
 {% endblock %}
 
 {% block footer %}
-    {{ bfe_appears_in_collections(bfo, prefix="<p style='margin-left: 10px;'><em>The record appears in these collections:</em><br />", suffix="</p>") }}
+    {# bfe_appears_in_collections(bfo, prefix="<p style='margin-left: 10px;'><em>The record appears in these collections:</em><br />", suffix="</p>") #}
 
-    {# WebTags #}
-    {{ tfn_webtag_record_tags(record.get('recid'), current_user.get_id())|prefix('<hr />') }}
-    {{ tfn_get_back_to_search_links(record.get('recid'))|wrap(prefix='<div class="pull-right linksbox">', suffix='</div>') }}
+    {# tfn_get_back_to_search_links(record.get('recid'))|wrap(prefix='<div class="pull-right linksbox">', suffix='</div>') #}
 {% endblock %}

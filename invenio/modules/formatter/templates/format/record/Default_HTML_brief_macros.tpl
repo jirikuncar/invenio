@@ -33,9 +33,9 @@
         <a href="#authors_{{ record['recid'] }}"
            class="text-muted" data-toggle="modal"
            data-target="#authors_{{ record['recid'] }}">
-            <em>{{ _(' et al') }}</em>
+            <em> {{ _('et al') }}</em>
         </a>
-        {% endif %}
+      {% endif %}
 
       |
       {% endif %}
@@ -85,12 +85,9 @@
           {{ keyword['term'] }}
         </a>
       </span>
-      &nbsp
+      &nbsp;
       {% endfor %}
       {% endif %}
-
-      {# WebTags #}
-      {{ tfn_webtag_record_tags(record['recid'], current_user.get_id())|prefix('|') }}
     </p>
     {% if record.get('number_of_authors', 0) > number_of_displayed_authors %}
     {% set sep = joiner("; ") %}
@@ -111,16 +108,16 @@
 {% endmacro %}
 
 {% macro render_fulltext_snippets() %}
-  {{ tfn_get_fulltext_snippets(record['recid'], request.args['p'], qid, current_user) | wrap(prefix='<p><small>', suffix='</small></p>') }}
+  {# tfn_get_fulltext_snippets(record['recid'], request.args['p'], qid, current_user) | wrap(prefix='<p><small>', suffix='</small></p>') #}
 {% endmacro %}
 
 {% macro record_info() %}
   {{ record.get('primary_report_number')|prefix('<i class="glyphicon glyphicon-qrcode"></i> ') }}
-  {{ bfe_additional_report_numbers(bfo, prefix='<i class="glyphicon glyphicon-qrcode"></i> ',
-                                   separator=' <i class="glyphicon glyphicon-qrcode"></i> ') }}
+  {# bfe_additional_report_numbers(bfo, prefix='<i class="glyphicon glyphicon-qrcode"></i> ',
+                                   separator=' <i class="glyphicon glyphicon-qrcode"></i> ') #}
 
-  {{ bfe_publi_info(bfo, prefix='| <i class="glyphicon glyphicon-book"></i> ') }}
-  {{ bfe_doi(bfo, prefix='| <i class="glyphicon glyphicon-barcode"></i> ') }}
+  {# bfe_publi_info(bfo, prefix='| <i class="glyphicon glyphicon-book"></i> ') #}
+  {# bfe_doi(bfo, prefix='| <i class="glyphicon glyphicon-barcode"></i> ') #}
   {# '<a href="http://dx.doi.org/%(doi)s" title="DOI" target="_blank"><i class="glyphicon glyphicon-barcode"></i> %(doi)s</a>'|format(doi=record['doi']) if record.get('doi') #}
 
 {% endmacro %}
